@@ -1,7 +1,7 @@
 package com.example.batchconfig.brand.brandShedule;
 
 public enum TellerTypeCode {
-    BATCH_TELLER("9999","tell_batch");
+    BATCH_TELLER("9999","teller_batch");
 
     private final String code;
     private final String description;

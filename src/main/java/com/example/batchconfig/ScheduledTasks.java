@@ -23,7 +23,7 @@ public class ScheduledTasks {
         personDTO.setAge(30);
         personService.savePerson(personDTO);
     }
-    @Scheduled(cron = "0 50 11 * * *") // Runs every day at 9:12 AMuns every day at 5:06 PM
+    @Scheduled(cron = "0 40 13 * * *") // Runs every day at 9:12 AMuns every day at 5:06 PM
     public void savePersonAgeBiggerThan30At305PM() {
         personAgeBiggerThan30Service.savePersonBiggerThan30();
     }
