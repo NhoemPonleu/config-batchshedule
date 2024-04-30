@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: todo-app
+  datasource:
+    url: jdbc:postgresql://dpg-cng0mh5a73kc73dd574g-a.singapore-postgres.render.com:5432/student_9c9i
+    password: AC4M4ybeOEU80aq3EFvBw18SHvOYjBHr
+    username: student_9c9i_user
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+
+application:
+  security:
+    jwt:
+      secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      expiration: 86400000 # a day
+      refresh-token:
+        expiration: 604800000 # 7 days
