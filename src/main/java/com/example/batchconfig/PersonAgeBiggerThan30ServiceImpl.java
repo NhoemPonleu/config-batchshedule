@@ -35,10 +35,10 @@ public class PersonAgeBiggerThan30ServiceImpl implements PersonAgeBiggerThan30Se
             if (person.getAge() >= 30) {
                 PersonAgeBiggerThan30 personAgeBiggerThan30 = new PersonAgeBiggerThan30();
                 personAgeBiggerThan30.setAge(person.getAge());
-             //   personAgeBiggerThan30.setRegisterDate(LocalDateTime.now());
+                personAgeBiggerThan30.setRegisterDate(LocalDateTime.now());
                 ZoneId cambodiaZone = ZoneId.of("Asia/Phnom_Penh");
                 LocalTime cambodiaTime = LocalTime.now(cambodiaZone);
-             //   personAgeBiggerThan30.setRegisterTime(cambodiaTime);
+                personAgeBiggerThan30.setRegisterTime(cambodiaTime);
                 personAgeBiggerThan30.setPerson(person);
 
                 // Set the brand for the person

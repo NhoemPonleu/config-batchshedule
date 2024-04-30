@@ -23,6 +23,13 @@ public class AuditableEntity {
 
     private static final ZoneId CAMBODIA_ZONE = ZoneId.of("Asia/Phnom_Penh");
 
+    public AuditableEntity() {
+        this.createdAt = LocalDateTime.now(CAMBODIA_ZONE);
+        this.updatedAt = LocalDateTime.now(CAMBODIA_ZONE);
+        this.localTime = LocalTime.now(CAMBODIA_ZONE);
+        this.transactionDate = LocalDate.now(CAMBODIA_ZONE);
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -37,22 +44,6 @@ public class AuditableEntity {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public LocalDate getCreatedDate() {
-        return createdAt != null ? createdAt.toLocalDate() : null;
-    }
-
-    public LocalTime getCreatedTime() {
-        return createdAt != null ? createdAt.toLocalTime() : null;
-    }
-
-    public LocalDate getUpdatedDate() {
-        return updatedAt != null ? updatedAt.toLocalDate() : null;
-    }
-
-    public LocalTime getUpdatedTime() {
-        return updatedAt != null ? updatedAt.toLocalTime() : null;
     }
 
     public LocalDate getTransactionDate() {
@@ -71,15 +62,20 @@ public class AuditableEntity {
         this.localTime = localTime;
     }
 
-    public static LocalDateTime now() {
-        return LocalDateTime.now(CAMBODIA_ZONE);
+    // Additional convenience methods
+    public LocalDate getCreatedDate() {
+        return createdAt != null ? createdAt.toLocalDate() : null;
     }
 
-    public static LocalDate today() {
-        return LocalDate.now(CAMBODIA_ZONE);
+    public LocalTime getCreatedTime() {
+        return createdAt != null ? createdAt.toLocalTime() : null;
     }
 
-    public static LocalTime currentTime() {
-        return LocalTime.now(CAMBODIA_ZONE);
+    public LocalDate getUpdatedDate() {
+        return updatedAt != null ? updatedAt.toLocalDate() : null;
+    }
+
+    public LocalTime getUpdatedTime() {
+        return updatedAt != null ? updatedAt.toLocalTime() : null;
     }
 }
