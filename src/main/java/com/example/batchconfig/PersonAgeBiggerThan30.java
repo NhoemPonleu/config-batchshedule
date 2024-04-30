@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Getter
@@ -24,6 +25,7 @@ public class PersonAgeBiggerThan30 {
     private LocalDate transactionDate;
     private String registerTellerId;
     private String registerTellerName;
+    private LocalTime registerTime;
     @ManyToOne
     private Brand brand;
 }

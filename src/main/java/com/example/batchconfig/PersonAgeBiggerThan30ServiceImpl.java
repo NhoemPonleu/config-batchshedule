@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -34,6 +36,9 @@ public class PersonAgeBiggerThan30ServiceImpl implements PersonAgeBiggerThan30Se
                 PersonAgeBiggerThan30 personAgeBiggerThan30 = new PersonAgeBiggerThan30();
                 personAgeBiggerThan30.setAge(person.getAge());
                 personAgeBiggerThan30.setRegisterDate(LocalDateTime.now());
+                ZoneId cambodiaZone = ZoneId.of("Asia/Phnom_Penh");
+                LocalTime cambodiaTime = LocalTime.now(cambodiaZone);
+                personAgeBiggerThan30.setRegisterTime(cambodiaTime);
                 personAgeBiggerThan30.setPerson(person);
 
                 // Set the brand for the person
