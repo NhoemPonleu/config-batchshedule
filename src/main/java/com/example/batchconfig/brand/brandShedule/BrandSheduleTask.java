@@ -18,14 +18,14 @@ public class BrandSheduleTask {
         this.brandTransactionEveryDayService = brandTransactionEveryDayService;
     }
 
-    @Scheduled(cron = "00 00 17 * * *", zone = "Asia/Phnom_Penh")// Runs every day at 10:01 AM
+    @Scheduled(cron = "0 10 9 * * *", zone = "Asia/Phnom_Penh")// Runs every day at 10:01 AM
     public void runBrandCloaseYN() {
         BrandTransactionEveryDayDTO brandTransactionEveryDayDTO = new BrandTransactionEveryDayDTO();
         // Set DTO properties if needed
 
         brandTransactionEveryDayService.brandCloaseYN(brandTransactionEveryDayDTO);
     }
-    @Scheduled(cron = "00 00 7 * * *", zone = "Asia/Phnom_Penh")
+    @Scheduled(cron = "0 59 8 * * *", zone = "Asia/Phnom_Penh")
     public void runBrandOpenYN() {
         BrandTransactionEveryDayDTO brandTransactionEveryDayDTO = new BrandTransactionEveryDayDTO();
         // Set DTO properties if needed
