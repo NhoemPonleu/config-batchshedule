@@ -25,7 +25,7 @@ public class BrandSheduleTask {
 
         brandTransactionEveryDayService.brandCloaseYN(brandTransactionEveryDayDTO);
     }
-    @Scheduled(cron = "0 59 8 * * *", zone = "Asia/Phnom_Penh")
+    @Scheduled(cron = "0 40 9 * * *", zone = "Asia/Phnom_Penh")
     public void runBrandOpenYN() {
         BrandTransactionEveryDayDTO brandTransactionEveryDayDTO = new BrandTransactionEveryDayDTO();
         // Set DTO properties if needed
