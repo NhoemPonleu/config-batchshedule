@@ -138,6 +138,8 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
      //   Long maxSeqNo = accountTransactionRepository.findMaxSeqNoByAccountId(account.getAccountNumber());
         // register into table transaction
         AccountTransaction accountTransaction=new AccountTransaction();
+        accountTransaction.setAccountId(transferRequest.getSenderAccountId());
+        accountTransaction.setAccountId(transferRequest.getReceiverAccountId());
         accountTransaction.setTransactionAmount(transferRequest.getAmount());
         accountTransaction.setTransactionDate(LocalDate.now());
         accountTransaction.setTransactionType(TransactionType.TRANSFER_ACCOUNT.getCode());
@@ -154,6 +156,7 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
         transferResponse.setTransactionDate(LocalDate.now());
         transferResponse.setReceiverAccountId(transferRequest.getReceiverAccountId());
         transferResponse.setSenderAccountId(transferRequest.getSenderAccountId());
+        transferResponse.setTransactionTime(LocalTime.now());
         transferResponse.setAmount(amount);
     //    transferResponse.setTransactionTotalAmount(amount.add(transferRequest.));
         transferResponse.setTransactionTotalAmount(amount);
