@@ -28,6 +28,7 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
     public void registerAccountTransaction() {
         // find account balance>1000
         List<Account> accounts = accountRepository.findByBalanceGreaterThanEqual(new BigDecimal("1000"));
+        long size=accounts.size();
         if (accounts.isEmpty()) {
             logger.warn("No accounts with a balance greater than or equal to $1000 found.");
             throw new RuntimeException("No accounts with a balance greater than or equal to $1000 found.");
