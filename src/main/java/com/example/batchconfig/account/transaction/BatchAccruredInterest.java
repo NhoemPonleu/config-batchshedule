@@ -10,7 +10,7 @@ public class BatchAccruredInterest {
     @Autowired
     private  AccountTranactionService accountService;
 
- //   @Scheduled(cron = "0 * * * * *", zone = "Asia/Phnom_Penh") // run every minute
+    @Scheduled(cron = "0 0 8 * * *", zone = "Asia/Phnom_Penh")
     public void accrueInterestDaily() {
         accountService.registerAccountTransaction();
     }

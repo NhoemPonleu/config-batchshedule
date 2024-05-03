@@ -23,6 +23,11 @@ public class AccountTransaction {
     private BigDecimal acruedInterest;
     private BigDecimal acruedAmount;
     private BigDecimal firstAmount;
+    private BigDecimal transactionAmount;
+    private BigDecimal transactionTotalAmount;
+    private BigDecimal feeAmount;
+    private String fromAccountId;
+    private String toAccountId;
     private LocalDate transactionDate;
     private String transactionType;
     private LocalDateTime transactionTime;

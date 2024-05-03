@@ -2,7 +2,10 @@ package com.example.batchconfig.account.transaction;
 
 public enum TransactionType {
     FIRST_REGISTER_ACCOUNT("01", "register new account"),
-    BATCH_ACCRUED_INTEREST("02", "Batch accrued interest");
+    BATCH_ACCRUED_INTEREST("02", "Batch accrued interest"),
+    TRANSFER_ACCOUNT("03","account transfer"),
+    WITHDRAW_ACCOUNT("04","account withdraw"),
+    DEPOSIT_ACCOUNT("05","deposit account");
 
     private final String code;
     private final String description;

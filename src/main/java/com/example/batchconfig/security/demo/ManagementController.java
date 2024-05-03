@@ -6,6 +6,8 @@ import com.example.batchconfig.account.AccountServiceImpl;
 import com.example.batchconfig.account.transaction.AccountTranactionService;
 import com.example.batchconfig.account.transaction.AccountWithdrawalResponse;
 import com.example.batchconfig.account.transaction.WithdrawalRequestDTO;
+import com.example.batchconfig.account.transaction.transfer.TransferRequestDTO;
+import com.example.batchconfig.account.transaction.transfer.TransferResponse;
 import com.example.batchconfig.baseResponse.BaseApi;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -27,6 +29,7 @@ public class ManagementController {
 
     private final AccountServiceImpl accountService;
     private final AccountTranactionService accountTranactionService;
+
     @Operation(
             description = "Get endpoint for manager",
             summary = "This is a summary for management get endpoint",
@@ -53,7 +56,7 @@ public class ManagementController {
 
     @PostMapping
     public BaseApi<?> registerAccount(@RequestBody AccountRequestDTO accountRequest) {
-        Account account= accountService.registerAccount(accountRequest);
+        Account account = accountService.registerAccount(accountRequest);
         return BaseApi.builder()
                 .code(HttpStatus.OK.value())
                 .message("Account registered successfully")
@@ -62,23 +65,39 @@ public class ManagementController {
                 .status(true)
                 .build();
     }
-//    @PutMapping
+
+    //    @PutMapping
 //    public String put() {
 //        return "PUT:: management controller";
 //    }
-@PostMapping("/witdrawal")
-public BaseApi<?> withdrawAccountTransaction(@RequestBody WithdrawalRequestDTO withdrawalRequestDTO) {
-    AccountWithdrawalResponse account = accountTranactionService.withdrawAccountTransaction(withdrawalRequestDTO);
-    return BaseApi.builder()
+    @PostMapping("/witdrawal")
+    public BaseApi<?> withdrawAccountTransaction(@RequestBody WithdrawalRequestDTO withdrawalRequestDTO) {
+        AccountWithdrawalResponse account = accountTranactionService.withdrawAccountTransaction(withdrawalRequestDTO);
+        return BaseApi.builder()
                 .code(HttpStatus.OK.value())
                 .message("Account withdrawal successful")
                 .timeStamp(LocalDateTime.now())
                 .data(account)
                 .status(true)
                 .build();
-}
-    @DeleteMapping
-    public String delete() {
-        return "DELETE:: management controller";
+    }
+
+    @PostMapping("/transfer")
+    public BaseApi<TransferResponse> transferBalance(@RequestBody TransferRequestDTO transferRequest) {
+        TransferResponse transferResponse = accountTranactionService.transferBalance(transferRequest);
+
+        return BaseApi.<TransferResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Transfer successful")
+                .timeStamp(LocalDateTime.now())
+                .data(transferResponse)
+                .status(true)
+                .build();
     }
 }
+
+
+//        @DeleteMapping
+//        public String delete () {
+//            return "DELETE:: management controller";
+//        }
