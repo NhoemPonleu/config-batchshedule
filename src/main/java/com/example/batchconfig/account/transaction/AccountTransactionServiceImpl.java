@@ -92,13 +92,16 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
         if (withdrawalAmount.compareTo(account.getBalance()) > 0) {
             throw new IllegalArgumentException("Insufficient funds");
         }
-
+        Long maxSeqNo = accountTransactionRepository.findMaxSeqNoByAccountId(account.getAccountNumber());
         // Create a new account transaction record
         AccountTransaction accountTransaction = new AccountTransaction();
+        accountTransaction.setTransactionSeqNo(maxSeqNo != null ? maxSeqNo + 1 : 1);
         accountTransaction.setAccountId(account.getAccountNumber());
         accountTransaction.setTransactionDate(LocalDate.now());
         accountTransaction.setFirstAmount(withdrawalAmount.negate()); // Negate the amount for withdrawal
-
+        accountTransaction.setTransactionType(TransactionType.WITHDRAW_ACCOUNT.getCode());
+        accountTransaction.setTransactionTime(LocalDateTime.now());
+        accountTransaction.setRegisterTime(LocalTime.now());
         // Save the transaction record
         accountTransactionRepository.save(accountTransaction);
 
@@ -132,7 +135,7 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
 
         senderAccount.setBalance(senderNewBalance);
         receiverAccount.setBalance(receiverNewBalance);
-
+     //   Long maxSeqNo = accountTransactionRepository.findMaxSeqNoByAccountId(account.getAccountNumber());
         // register into table transaction
         AccountTransaction accountTransaction=new AccountTransaction();
         accountTransaction.setTransactionAmount(transferRequest.getAmount());
