@@ -60,4 +60,8 @@ public class AccountServiceImpl implements AccountService {
 
         return accountNumber;
     }
+    public Account findAccountByAccountNumber(String accountNumber) {
+        return accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+    }
 }

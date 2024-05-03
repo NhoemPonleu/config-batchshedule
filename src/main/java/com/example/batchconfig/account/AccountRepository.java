@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
     List<Account> findByBalanceGreaterThanEqual(BigDecimal balance);
@@ -14,5 +15,11 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Transactional
     @Query("UPDATE Account a SET a.balance = :balance, a.lastAmount = :lastAmount WHERE a.accountNumber = :accountNumber")
     void updateAmountByAccountNumber(String accountNumber, BigDecimal balance, BigDecimal lastAmount);
+    Optional<Account> findByAccountNumber(String accountNumber);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Account a SET a.balance = :balance, a.lastAmount = :lastAmount WHERE a.accountNumber = :accountNumber")
+    void updateAccountWithdrawal(String accountNumber, BigDecimal balance, BigDecimal lastAmount);
 
 }
