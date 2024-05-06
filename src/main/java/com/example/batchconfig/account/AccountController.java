@@ -12,9 +12,6 @@ import java.time.LocalDateTime;
 @RequestMapping("/api/v1/accounts")
 public class AccountController {
 
-    @Autowired
-    private AccountServiceImpl accountService;
-
 //    @PostMapping
 //    public BaseApi<?> registerAccount(@RequestBody AccountRequestDTO accountRequest) {
 //       Account account= accountService.registerAccount(accountRequest);

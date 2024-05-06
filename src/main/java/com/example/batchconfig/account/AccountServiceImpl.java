@@ -3,12 +3,17 @@ package com.example.batchconfig.account;
 import com.example.batchconfig.account.transaction.AccountTransaction;
 import com.example.batchconfig.account.transaction.AccountTransactionRepository;
 import com.example.batchconfig.account.transaction.TransactionType;
+import com.example.batchconfig.security.user.User;
+import com.example.batchconfig.security.user.UserRepository;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -18,10 +23,12 @@ public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
     private final AccountTransactionRepository accountTransactionRepository;
+    private final UserRepository userRepository;
     private final AtomicLong accountNumberSequence = new AtomicLong(1L); // Starting sequence number
 
     @Override
     public Account registerAccount(AccountRequestDTO accountRequestDTO) {
+       Optional<User> user= userRepository.findById(accountRequestDTO.getUserId());
         Account account = new Account();
         String accountNumber = generateAccountNumber(accountRequestDTO.getBrandCode());
         account.setAccountType(accountRequestDTO.getAccountType());
@@ -30,6 +37,7 @@ public class AccountServiceImpl implements AccountService {
         account.setBrandCode(accountRequestDTO.getBrandCode());
         account.setFirstAmount(accountRequestDTO.getBalance());
         account.setLastAmount(accountRequestDTO.getBalance());
+        account.setUser(user.get());
         account.setAccountNumber(accountNumber);
         // register in transaction table
         AccountTransaction accountTransaction = new AccountTransaction();
@@ -65,4 +73,10 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new RuntimeException("Account not found"));
     }
+
+    @Override
+    public Account findAccountById(Long id) {
+        return null;
+    }
+
 }

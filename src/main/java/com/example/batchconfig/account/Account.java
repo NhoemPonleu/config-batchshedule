@@ -1,9 +1,7 @@
 package com.example.batchconfig.account;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.Id;
+import com.example.batchconfig.security.user.User;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
@@ -28,6 +26,8 @@ public class Account {
     private String accountType;
     private BigDecimal firstAmount;
     private BigDecimal lastAmount;
+    @OneToOne
+    private User user;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
