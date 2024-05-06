@@ -154,6 +154,8 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
         // return reponse data to client
         TransferResponse transferResponse = new TransferResponse();
         transferResponse.setTransactionDate(LocalDate.now());
+        transferResponse.setAccountSenderName(senderAccount.getAccountName());
+        transferResponse.setAccountReceiverName(receiverAccount.getAccountName());
         transferResponse.setReceiverAccountId(transferRequest.getReceiverAccountId());
         transferResponse.setSenderAccountId(transferRequest.getSenderAccountId());
         transferResponse.setTransactionTime(LocalTime.now());

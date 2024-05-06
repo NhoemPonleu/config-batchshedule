@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 public class Account {
     @Id
     private String accountNumber; // Making accountNumber as primary key
-
+    private String accountName;
     private String brandCode;
     private BigDecimal balance;
     private String accountType;

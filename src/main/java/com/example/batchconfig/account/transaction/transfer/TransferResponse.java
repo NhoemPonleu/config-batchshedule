@@ -9,6 +9,8 @@ import java.time.LocalTime;
 public class TransferResponse {
     private String senderAccountId;
     private String receiverAccountId;
+    private String accountSenderName;
+    private String accountReceiverName;
     private BigDecimal amount;
     private BigDecimal feeAmount;
     private BigDecimal transactionTotalAmount;

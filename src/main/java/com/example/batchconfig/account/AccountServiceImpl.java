@@ -26,6 +26,7 @@ public class AccountServiceImpl implements AccountService {
         String accountNumber = generateAccountNumber(accountRequestDTO.getBrandCode());
         account.setAccountType(accountRequestDTO.getAccountType());
         account.setBalance(accountRequestDTO.getBalance());
+        account.setAccountName(accountRequestDTO.getAccountName());
         account.setBrandCode(accountRequestDTO.getBrandCode());
         account.setFirstAmount(accountRequestDTO.getBalance());
         account.setLastAmount(accountRequestDTO.getBalance());
