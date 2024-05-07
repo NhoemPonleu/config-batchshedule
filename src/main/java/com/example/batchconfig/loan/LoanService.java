@@ -1,8 +1,9 @@
 package com.example.batchconfig.loan;
 
-import java.util.List;
+import com.example.batchconfig.loan.transaction.GenerateScheduleDTO;
 
 public interface LoanService {
     LoanReposeDTO registerNewLoan(LoanRequestDTO loanRequestDTO);
-    List<LoanScheduleItem> generateLoanSchedule(LoanRequestDTO loanRequestDTO);
+
+    GenerateScheduleDTO generateLoanSchedule(RequestSheduleDTO requestSheduleDTO);
 }

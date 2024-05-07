@@ -1,5 +1,7 @@
 package com.example.batchconfig.loan;
 
+import com.example.batchconfig.exception.ResourceNotFoundException;
+import com.example.batchconfig.loan.transaction.GenerateScheduleDTO;
 import com.example.batchconfig.loan.transaction.LoanTransactions;
 import com.example.batchconfig.loan.transaction.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +23,13 @@ public class LoanServiceImpl implements LoanService {
     @Override
     public LoanReposeDTO registerNewLoan(LoanRequestDTO loanRequestDTO) {
         Loan loan = new Loan();
+        Double percentage=loanRequestDTO.getInterestRate()* loanRequestDTO.getLoanTerm()/100;
         String accountNumber = generateAccountNumber(loanRequestDTO.getBrandId());
         loan.setLoanAmount(loanRequestDTO.getLoanAmount());
         loan.setLoanTerm(loanRequestDTO.getLoanTerm());
         loan.setInterestRate(loanRequestDTO.getInterestRate());
         loan.setLoanAccountNumber(accountNumber);
+        loan.setLoanPercentage(percentage);
         loanRepository.save(loan);
 
         // register into table transaction
@@ -41,51 +45,73 @@ public class LoanServiceImpl implements LoanService {
         loanReposeDTO.setLoanAccountNumber(loan.getLoanAccountNumber());
         return loanReposeDTO;
     }
+@Override
+    public GenerateScheduleDTO generateLoanSchedule(RequestSheduleDTO requestSheduleDTO) {
+        List<LoanScheduleItem> loanScheduleItems = new ArrayList<>();
+        Loan loan = loanRepository.findById(requestSheduleDTO.getLoanId())
+                .orElseThrow(() -> new ResourceNotFoundException("Loan", requestSheduleDTO.getLoanId()));
 
-    @Override
-    public List<LoanScheduleItem> generateLoanSchedule(LoanRequestDTO loanRequestDTO) {
-        List<LoanScheduleItem> schedule = new ArrayList<>();
+        BigDecimal remainingBalance = loan.getLoanAmount();
+        BigDecimal annualInterestRate = BigDecimal.valueOf(loan.getLoanPercentage());
+        BigDecimal monthlyInterestRate = annualInterestRate.divide(BigDecimal.valueOf(12), 8, BigDecimal.ROUND_HALF_UP);
+        BigDecimal monthlyPayment = calculateMonthlyPayment(remainingBalance, monthlyInterestRate, loan.getLoanTerm());
 
-        BigDecimal loanAmount = loanRequestDTO.getLoanAmount();
-        Double interestRate = loanRequestDTO.getInterestRate();
-        Integer loanTerm = loanRequestDTO.getLoanTerm();
+        BigDecimal totalInterest = BigDecimal.ZERO; // Initialize total interest
+        BigDecimal totalPrincipal = BigDecimal.ZERO; // Initialize total principal
 
-        BigDecimal monthlyInterestRate = BigDecimal.valueOf(interestRate / 100 / 12);
-        BigDecimal monthlyPayment = calculateMonthlyPayment(loanAmount, monthlyInterestRate, loanTerm);
-
-        BigDecimal remainingBalance = loanAmount;
-        for (int period = 1; period <= loanTerm; period++) {
+        for (int period = 1; period <= loan.getLoanTerm(); period++) {
             BigDecimal interest = remainingBalance.multiply(monthlyInterestRate);
             BigDecimal principal = monthlyPayment.subtract(interest);
             remainingBalance = remainingBalance.subtract(principal);
 
-            LocalDate payDate = LocalDate.now().plusMonths(period); // Adjust as needed
+            // Round up payment if greater than 5
+            BigDecimal payment = monthlyPayment;
+            if (payment.compareTo(BigDecimal.valueOf(5)) > 0) {
+                payment = payment.setScale(0, RoundingMode.UP);
+            }
 
-            LoanScheduleItem scheduleItem = new LoanScheduleItem(period, payDate, monthlyPayment, interest, principal, remainingBalance);
-            schedule.add(scheduleItem);
+            LocalDate payDate = LocalDate.now().plusMonths(period); // Adjust this based on your logic
+
+            LoanScheduleItem scheduleItem = new LoanScheduleItem(period, payDate, payment, interest, principal, remainingBalance);
+            loanScheduleItems.add(scheduleItem);
+
+            totalInterest = totalInterest.add(interest); // Add interest to total interest
+            totalPrincipal = totalPrincipal.add(principal); // Add principal to total principal
         }
 
-        return schedule;
+        return new GenerateScheduleDTO(loan.getCustomer().getFirstName(), loan.getLoanAccountNumber(), loanScheduleItems, totalInterest, totalPrincipal.add(totalInterest));
     }
 
-    private BigDecimal calculateMonthlyPayment(BigDecimal loanAmount, BigDecimal monthlyInterestRate, Integer loanTerm) {
-        BigDecimal factor = monthlyInterestRate.add(BigDecimal.ONE).pow(loanTerm);
-        BigDecimal numerator = loanAmount.multiply(monthlyInterestRate).multiply(factor);
-        BigDecimal denominator = factor.subtract(BigDecimal.ONE);
-        return numerator.divide(denominator, 2, BigDecimal.ROUND_HALF_UP);
+    private BigDecimal calculateMonthlyPayment(BigDecimal loanAmount, BigDecimal monthlyInterestRate, int loanTerm) {
+        BigDecimal temp = BigDecimal.ONE.add(monthlyInterestRate).pow(loanTerm);
+        return loanAmount.multiply(monthlyInterestRate).multiply(temp).divide(temp.subtract(BigDecimal.ONE), 2, BigDecimal.ROUND_HALF_UP);
     }
-    public String generateAccountNumber(String brandCode) {
-        String accountNumber;
-        do {
-            // Increment and get the next sequence number
-            long sequenceNumber = accountNumberSequence.getAndIncrement();
+//    public String generateAccountNumber(String brandCode) {
+//        String accountNumber;
+//        do {
+//            // Increment and get the next sequence number
+//            long sequenceNumber = accountNumberSequence.getAndIncrement();
+//
+//            // Combine brand code and sequence number
+//            accountNumber = brandCode  + String.format("%05d", sequenceNumber);
+//        } while (accountNumbersMap.putIfAbsent(accountNumber, true) != null); // Check for uniqueness
+//
+//        return accountNumber;
+//    }
+public String generateAccountNumber(String brandCode) {
+    String accountNumber;
+    do {
+        // Increment and get the next sequence number
+        long sequenceNumber = accountNumberSequence.getAndIncrement();
 
-            // Combine brand code and sequence number
-            accountNumber = brandCode  + String.format("%05d", sequenceNumber);
-        } while (accountNumbersMap.putIfAbsent(accountNumber, true) != null); // Check for uniqueness
+        // Combine brand code and sequence number
+        accountNumber = brandCode + String.format("%05d", sequenceNumber);
+    } while (loanRepository.existsByLoanAccountNumber(accountNumber)); // Check for uniqueness in the database
 
-        return accountNumber;
-    }
+    return accountNumber;
+}
+
+
     private final ConcurrentHashMap<String, Boolean> accountNumbersMap = new ConcurrentHashMap<>();
     private final AtomicLong accountNumberSequence = new AtomicLong(1L);
 }

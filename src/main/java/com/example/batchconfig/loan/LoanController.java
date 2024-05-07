@@ -1,15 +1,12 @@
 package com.example.batchconfig.loan;
 
 import com.example.batchconfig.baseResponse.BaseApi;
+import com.example.batchconfig.loan.transaction.GenerateScheduleDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/loan")
@@ -28,9 +25,9 @@ public class LoanController {
                 .status(true)
                 .build();
     }
-    @PostMapping("/generate-shedule")
-    public BaseApi<?>registerShedulePayment(@RequestBody LoanRequestDTO loanRequestDTO) {
-        List<LoanScheduleItem> loanScheduleItem=loanService.generateLoanSchedule(loanRequestDTO);
+    @PostMapping("/shedule")
+    public BaseApi<?>registerShedulePayment(RequestSheduleDTO sheduleDTO) {
+        GenerateScheduleDTO loanScheduleItem=loanService.generateLoanSchedule(sheduleDTO);
         return BaseApi.builder()
                 .code(HttpStatus.OK.value())
                 .message("shedule registered successfully")

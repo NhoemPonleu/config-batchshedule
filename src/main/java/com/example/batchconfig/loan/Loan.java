@@ -1,6 +1,7 @@
 package com.example.batchconfig.loan;
 
 import com.example.batchconfig.brand.Brand;
+import com.example.batchconfig.customer.Customer;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,7 +23,10 @@ public class Loan {
     private Integer loanTerm;
     private Double interestRate;
     private BigDecimal loanAmount;
+    private Double loanPercentage;
     private String feeRate;
+    @ManyToOne
+    private Customer customer;
     @ManyToOne
     private Brand brand;
 }

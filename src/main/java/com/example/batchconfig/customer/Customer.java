@@ -1,10 +1,19 @@
 package com.example.batchconfig.customer;
 
-import java.math.BigDecimal;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.math.BigDecimal;
+@Entity
+@Getter
+@Setter
+@Table(name = "tblCustomer")
 public class Customer {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String firstName;
-    private BigDecimal amount;
-    private String interestRate;
+    private BigDecimal lastName;
+    private String address;
 }
