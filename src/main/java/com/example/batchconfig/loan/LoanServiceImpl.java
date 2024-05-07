@@ -1,6 +1,7 @@
 package com.example.batchconfig.loan;
 
 import com.example.batchconfig.exception.ResourceNotFoundException;
+import com.example.batchconfig.exception.ResourceNotFoundException1;
 import com.example.batchconfig.loan.transaction.GenerateScheduleDTO;
 import com.example.batchconfig.loan.transaction.LoanTransactions;
 import com.example.batchconfig.loan.transaction.TransactionRepository;
@@ -32,11 +33,11 @@ public class LoanServiceImpl implements LoanService {
         loan.setLoanPercentage(percentage);
         loanRepository.save(loan);
 
-        // register into table transaction
-        LoanTransactions loanTransactions=new LoanTransactions();
-        loanTransactions.setFirstBalance(loan.getLoanAmount());
-        loanTransactions.setLoan(loan.getLoanAccountNumber());
-        transactionRepository.save(loanTransactions);
+//        // register into table transaction
+//        LoanTransactions loanTransactions=new LoanTransactions();
+//        loanTransactions.setFirstBalance(loan.getLoanAmount());
+//        loanTransactions.setLoan(loan.getLoanAccountNumber());
+//        transactionRepository.save(loanTransactions);
 
         // response to client
         LoanReposeDTO loanReposeDTO = new LoanReposeDTO();
@@ -79,25 +80,15 @@ public class LoanServiceImpl implements LoanService {
             totalPrincipal = totalPrincipal.add(principal); // Add principal to total principal
         }
 
-        return new GenerateScheduleDTO(loan.getCustomer().getFirstName(), loan.getLoanAccountNumber(), loanScheduleItems, totalInterest, totalPrincipal.add(totalInterest));
+        return new GenerateScheduleDTO(loan.getCustomer().getFirstName()
+                , loan.getLoanAccountNumber(), loanScheduleItems
+                , totalInterest, totalPrincipal.add(totalInterest));
     }
 
     private BigDecimal calculateMonthlyPayment(BigDecimal loanAmount, BigDecimal monthlyInterestRate, int loanTerm) {
         BigDecimal temp = BigDecimal.ONE.add(monthlyInterestRate).pow(loanTerm);
         return loanAmount.multiply(monthlyInterestRate).multiply(temp).divide(temp.subtract(BigDecimal.ONE), 2, BigDecimal.ROUND_HALF_UP);
     }
-//    public String generateAccountNumber(String brandCode) {
-//        String accountNumber;
-//        do {
-//            // Increment and get the next sequence number
-//            long sequenceNumber = accountNumberSequence.getAndIncrement();
-//
-//            // Combine brand code and sequence number
-//            accountNumber = brandCode  + String.format("%05d", sequenceNumber);
-//        } while (accountNumbersMap.putIfAbsent(accountNumber, true) != null); // Check for uniqueness
-//
-//        return accountNumber;
-//    }
 public String generateAccountNumber(String brandCode) {
     String accountNumber;
     do {
@@ -114,4 +105,32 @@ public String generateAccountNumber(String brandCode) {
 
     private final ConcurrentHashMap<String, Boolean> accountNumbersMap = new ConcurrentHashMap<>();
     private final AtomicLong accountNumberSequence = new AtomicLong(1L);
+
+    @Override
+    public void loanRepayment(String loanAccountNumber, BigDecimal repaymentAmount) {
+        Loan loan = loanRepository.findByLoanAccountNumber(loanAccountNumber)
+                .orElseThrow(() -> new ResourceNotFoundException1("Loan", loanAccountNumber));
+
+        // Calculate interest
+        BigDecimal interest = loan.getLoanAmount().multiply(BigDecimal.valueOf(loan.getInterestRate() / 100));
+
+        // Calculate principal
+        BigDecimal principal = repaymentAmount.subtract(interest);
+
+        // Update remaining balance
+        BigDecimal remainingBalance = loan.getLoanAmount().subtract(principal);
+
+        // Create new transaction
+        LoanTransactions transaction = new LoanTransactions();
+        transaction.setLoanAccountNumber(loanAccountNumber);
+        transaction.setTransactionDate(LocalDate.now());
+        transaction.setPayment(repaymentAmount);
+        transaction.setInterest(interest);
+        transaction.setPrincipal(principal);
+
+        // Update loan and save transaction
+        loan.setLoanAmount(remainingBalance);
+        loanRepository.save(loan);
+        transactionRepository.save(transaction);
+    }
 }
