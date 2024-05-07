@@ -1,5 +1,6 @@
 package com.example.batchconfig.loan;
 
+import com.example.batchconfig.exception.InvalidRepaymentException;
 import com.example.batchconfig.exception.ResourceNotFoundException;
 import com.example.batchconfig.exception.ResourceNotFoundException1;
 import com.example.batchconfig.loan.transaction.GenerateScheduleDTO;
@@ -46,11 +47,11 @@ public class LoanServiceImpl implements LoanService {
         loanReposeDTO.setLoanAccountNumber(loan.getLoanAccountNumber());
         return loanReposeDTO;
     }
-@Override
+    @Override
     public GenerateScheduleDTO generateLoanSchedule(RequestSheduleDTO requestSheduleDTO) {
         List<LoanScheduleItem> loanScheduleItems = new ArrayList<>();
-        Loan loan = loanRepository.findById(requestSheduleDTO.getLoanId())
-                .orElseThrow(() -> new ResourceNotFoundException("Loan", requestSheduleDTO.getLoanId()));
+        Loan loan = loanRepository.findByLoanAccountNumber(requestSheduleDTO.getLoanId())
+                .orElseThrow(() -> new ResourceNotFoundException1("Loan", requestSheduleDTO.getLoanId()));
 
         BigDecimal remainingBalance = loan.getLoanAmount();
         BigDecimal annualInterestRate = BigDecimal.valueOf(loan.getLoanPercentage());
@@ -63,17 +64,22 @@ public class LoanServiceImpl implements LoanService {
         for (int period = 1; period <= loan.getLoanTerm(); period++) {
             BigDecimal interest = remainingBalance.multiply(monthlyInterestRate);
             BigDecimal principal = monthlyPayment.subtract(interest);
-            remainingBalance = remainingBalance.subtract(principal);
 
-            // Round up payment if greater than 5
-            BigDecimal payment = monthlyPayment;
-            if (payment.compareTo(BigDecimal.valueOf(5)) > 0) {
-                payment = payment.setScale(0, RoundingMode.UP);
+            // Round down principal if the decimal part is less than 5
+            if (principal.scale() > 0 && principal.remainder(BigDecimal.ONE).compareTo(new BigDecimal("0.5")) < 0) {
+                principal = principal.setScale(0, RoundingMode.DOWN);
             }
+
+            // Round down payment if the decimal part is less than 5
+            if (monthlyPayment.scale() > 0 && monthlyPayment.remainder(BigDecimal.ONE).compareTo(new BigDecimal("0.5")) < 0) {
+                monthlyPayment = monthlyPayment.setScale(0, RoundingMode.DOWN);
+            }
+
+            remainingBalance = remainingBalance.subtract(principal);
 
             LocalDate payDate = LocalDate.now().plusMonths(period); // Adjust this based on your logic
 
-            LoanScheduleItem scheduleItem = new LoanScheduleItem(period, payDate, payment, interest, principal, remainingBalance);
+            LoanScheduleItem scheduleItem = new LoanScheduleItem(period, payDate, monthlyPayment, interest, principal, remainingBalance);
             loanScheduleItems.add(scheduleItem);
 
             totalInterest = totalInterest.add(interest); // Add interest to total interest
@@ -110,6 +116,9 @@ public String generateAccountNumber(String brandCode) {
     public void loanRepayment(String loanAccountNumber, BigDecimal repaymentAmount) {
         Loan loan = loanRepository.findByLoanAccountNumber(loanAccountNumber)
                 .orElseThrow(() -> new ResourceNotFoundException1("Loan", loanAccountNumber));
+//        if (loan.getLoanAmount().compareTo(repaymentAmount) < 0) {
+//            throw new InvalidRepaymentException("Repayment amount exceeds remaining loan amount");
+//        }
 
         // Calculate interest
         BigDecimal interest = loan.getLoanAmount().multiply(BigDecimal.valueOf(loan.getInterestRate() / 100));

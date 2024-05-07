@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class RequestSheduleDTO {
-    private Long loanId;
+    private String loanId;
 }
