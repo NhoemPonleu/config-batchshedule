@@ -11,7 +11,7 @@ public class LoanBatchShedule {
     @Autowired
     private LoanService loanService;
 
-    @Scheduled(cron = "0 */1 * * * *", zone = "Asia/Phnom_Penh")
+ //   @Scheduled(cron = "0 */1 * * * *", zone = "Asia/Phnom_Penh")
     public void accrueInterestDaily() {
         loanService.accruedInterestEveryday();
     }
