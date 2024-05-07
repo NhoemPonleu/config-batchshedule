@@ -30,6 +30,6 @@ public class LoanTransactions {
 
     @Column(name = "principal")
     private BigDecimal principal;
-
+    private String paymentType;
     // Constructors, getters, and setters
 }

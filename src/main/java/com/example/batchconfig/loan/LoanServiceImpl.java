@@ -3,9 +3,7 @@ package com.example.batchconfig.loan;
 import com.example.batchconfig.exception.InvalidRepaymentException;
 import com.example.batchconfig.exception.ResourceNotFoundException;
 import com.example.batchconfig.exception.ResourceNotFoundException1;
-import com.example.batchconfig.loan.transaction.GenerateScheduleDTO;
-import com.example.batchconfig.loan.transaction.LoanTransactions;
-import com.example.batchconfig.loan.transaction.TransactionRepository;
+import com.example.batchconfig.loan.transaction.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -136,6 +134,7 @@ public String generateAccountNumber(String brandCode) {
         transaction.setPayment(repaymentAmount);
         transaction.setInterest(interest);
         transaction.setPrincipal(principal);
+        transaction.setPaymentType(TransactionTypeCode.REPAY_LOAN.getCode());
 
         // Update loan and save transaction
         loan.setLoanAmount(remainingBalance);
