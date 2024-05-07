@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Setter
 @NoArgsConstructor
@@ -24,6 +25,8 @@ public class Loan {
     private BigDecimal loanAmount;
     private Double loanPercentage;
     private String feeRate;
+    private LocalDate loanDate;
+    private BigDecimal accruedInterest;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")

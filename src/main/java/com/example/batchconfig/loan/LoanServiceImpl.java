@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +31,7 @@ public class LoanServiceImpl implements LoanService {
         loan.setInterestRate(loanRequestDTO.getInterestRate());
         loan.setLoanAccountNumber(accountNumber);
         loan.setLoanPercentage(percentage);
+        loan.setLoanDate(LocalDate.now());
         loanRepository.save(loan);
 
 //        // register into table transaction
@@ -117,6 +119,7 @@ public String generateAccountNumber(String brandCode) {
 //        if (loan.getLoanAmount().compareTo(repaymentAmount) < 0) {
 //            throw new InvalidRepaymentException("Repayment amount exceeds remaining loan amount");
 //        }
+        Long maxSeqNo = transactionRepository.findMaxSeqNoByAccountId(loan.getLoanAccountNumber());
 
         // Calculate interest
         BigDecimal interest = loan.getLoanAmount().multiply(BigDecimal.valueOf(loan.getInterestRate() / 100));
@@ -129,6 +132,7 @@ public String generateAccountNumber(String brandCode) {
 
         // Create new transaction
         LoanTransactions transaction = new LoanTransactions();
+        transaction.setTransactionSeqNo(maxSeqNo != null ? maxSeqNo + 1 : 1);
         transaction.setLoanAccountNumber(loanAccountNumber);
         transaction.setTransactionDate(LocalDate.now());
         transaction.setPayment(repaymentAmount);
@@ -140,5 +144,43 @@ public String generateAccountNumber(String brandCode) {
         loan.setLoanAmount(remainingBalance);
         loanRepository.save(loan);
         transactionRepository.save(transaction);
+    }
+
+    @Override
+    public List<Loan> listOfLoan() {
+    List<Loan> loanList=    loanRepository.findAll();
+        return loanList;
+    }
+
+    @Override
+    public void accruedInterestEveryday() {
+        List<Loan> loanList = listOfLoan();
+
+        LocalDate currentDate = LocalDate.now();
+
+        for (Loan loan : loanList) {
+            BigDecimal accruedInterest = calculateAccruedInterest(loan, currentDate);
+            // Update the loan's accrued interest in the database
+            loan.setAccruedInterest(accruedInterest);
+            LoanTransactions loanTransactions=new LoanTransactions();
+            loanTransactions.setInterest(accruedInterest);
+            loanTransactions.setLoanAccountNumber(loan.getLoanAccountNumber());
+            transactionRepository.save(loanTransactions);
+            loanRepository.save(loan);
+        }
+    }
+    private BigDecimal calculateAccruedInterest(Loan loan, LocalDate currentDate) {
+        // Calculate the daily interest rate
+        double dailyInterestRate = loan.getLoanPercentage() / 365;
+
+        // Calculate the number of days between the loan creation date and the current date
+        long days = ChronoUnit.DAYS.between(loan.getLoanDate(), currentDate);
+
+        // Calculate accrued interest
+        BigDecimal accruedInterest = loan.getLoanAmount()
+                .multiply(BigDecimal.valueOf(dailyInterestRate))
+                .multiply(BigDecimal.valueOf(days));
+
+        return accruedInterest;
     }
 }
