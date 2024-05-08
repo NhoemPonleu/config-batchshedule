@@ -4,7 +4,15 @@ import com.example.batchconfig.exception.InvalidRepaymentException;
 import com.example.batchconfig.exception.ResourceNotFoundException;
 import com.example.batchconfig.exception.ResourceNotFoundException1;
 import com.example.batchconfig.loan.transaction.*;
+import com.example.batchconfig.security.user.User;
+import com.example.batchconfig.security.user.UserRequestDTO;
+import com.example.batchconfig.util.UserAuthenticationUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -21,6 +29,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class LoanServiceImpl implements LoanService {
     private final LoanRepository loanRepository;
     private final TransactionRepository transactionRepository;
+    @Autowired
+    private UserAuthenticationUtils userAuthenticationUtils;
+
     @Override
     public LoanReposeDTO registerNewLoan(LoanRequestDTO loanRequestDTO) {
         Loan loan = new Loan();
@@ -49,8 +60,10 @@ public class LoanServiceImpl implements LoanService {
         loanReposeDTO.setLoanAccountNumber(loan.getLoanAccountNumber());
         return loanReposeDTO;
     }
+
     @Override
     public GenerateScheduleDTO generateLoanSchedule(RequestSheduleDTO requestSheduleDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         List<LoanScheduleItem> loanScheduleItems = new ArrayList<>();
         Loan loan = loanRepository.findByLoanAccountNumber(requestSheduleDTO.getLoanId())
                 .orElseThrow(() -> new ResourceNotFoundException1("Loan", requestSheduleDTO.getLoanId()));
@@ -104,7 +117,7 @@ public class LoanServiceImpl implements LoanService {
         } else {
             feeLoan = new BigDecimal(String.valueOf(feeAmount));
         }
-
+     //   String td=getUserNameByAuthentication();
         return new GenerateScheduleDTO(
                 loan.getCustomer().getFirstName(),
                 loan.getLoanAmount(),
@@ -118,7 +131,8 @@ public class LoanServiceImpl implements LoanService {
                 loan.getCreditOfficerName(),
                 loan.getInterestRate(),
                 loan.getLoanScheduleType().getDescription(),
-                feeLoan
+                feeLoan,// Get the username of the authenticated user
+                userAuthenticationUtils.getUserRequestDTO()
         );
     }
 
