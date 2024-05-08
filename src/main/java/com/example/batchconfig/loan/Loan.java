@@ -2,6 +2,7 @@ package com.example.batchconfig.loan;
 
 import com.example.batchconfig.brand.Brand;
 import com.example.batchconfig.customer.Customer;
+import com.example.batchconfig.loan.transaction.LoanSheduleTypeCodeq;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,9 +25,12 @@ public class Loan {
     private Double interestRate;
     private BigDecimal loanAmount;
     private Double loanPercentage;
-    private String feeRate;
+    private BigDecimal feeRate;
     private LocalDate loanDate;
     private BigDecimal accruedInterest;
+    private String creditOfficerName;
+    @Enumerated(EnumType.STRING)
+    private LoanSheduleTypeCodeq loanScheduleType;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")

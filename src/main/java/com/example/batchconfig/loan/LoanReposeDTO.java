@@ -9,4 +9,5 @@ public class LoanReposeDTO {
     private BigDecimal loanAmount;
     private Integer loanTerm;
 
+
 }

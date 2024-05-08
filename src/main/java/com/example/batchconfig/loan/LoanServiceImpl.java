@@ -32,6 +32,8 @@ public class LoanServiceImpl implements LoanService {
         loan.setLoanAccountNumber(accountNumber);
         loan.setLoanPercentage(percentage);
         loan.setLoanDate(LocalDate.now());
+        loan.setCreditOfficerName(loanRequestDTO.getCreditOfficerName());
+        loan.setLoanScheduleType(LoanSheduleTypeCodeq.valueOf(loanRequestDTO.getLaonType()));
         loanRepository.save(loan);
 
 //        // register into table transaction
@@ -63,16 +65,23 @@ public class LoanServiceImpl implements LoanService {
 
         for (int period = 1; period <= loan.getLoanTerm(); period++) {
             BigDecimal interest = remainingBalance.multiply(monthlyInterestRate);
-            BigDecimal principal = monthlyPayment.subtract(interest);
+            BigDecimal principal;
 
-            // Round down principal if the decimal part is less than 5
-            if (principal.scale() > 0 && principal.remainder(BigDecimal.ONE).compareTo(new BigDecimal("0.5")) < 0) {
-                principal = principal.setScale(0, RoundingMode.DOWN);
+            if (period == loan.getLoanTerm()) {
+                principal = remainingBalance; // Last payment should be the remaining balance
+            } else {
+                principal = monthlyPayment.subtract(interest);
             }
 
-            // Round down payment if the decimal part is less than 5
-            if (monthlyPayment.scale() > 0 && monthlyPayment.remainder(BigDecimal.ONE).compareTo(new BigDecimal("0.5")) < 0) {
-                monthlyPayment = monthlyPayment.setScale(0, RoundingMode.DOWN);
+            // Round up interest and principal if the decimal part is greater than or equal to 0.5
+            interest = roundDecimal(interest);
+            principal = roundDecimal(principal);
+
+            // Round up monthly payment to the nearest whole number
+            if (period != loan.getLoanTerm()) {
+                monthlyPayment = roundDecimal(monthlyPayment);
+            } else {
+                monthlyPayment = remainingBalance.add(interest).setScale(0, RoundingMode.UP);
             }
 
             remainingBalance = remainingBalance.subtract(principal);
@@ -86,14 +95,48 @@ public class LoanServiceImpl implements LoanService {
             totalPrincipal = totalPrincipal.add(principal); // Add principal to total principal
         }
 
-        return new GenerateScheduleDTO(loan.getCustomer().getFirstName()
-                , loan.getLoanAccountNumber(), loanScheduleItems
-                , totalInterest, totalPrincipal.add(totalInterest));
+        BigDecimal totalAmount = totalPrincipal.add(totalInterest).setScale(2, RoundingMode.HALF_UP); // Calculate total amount
+        LocalDate endate = LocalDate.now().plusMonths(loan.getLoanTerm());
+        BigDecimal feeLoan = BigDecimal.ZERO;
+        BigDecimal feeAmount = loan.getFeeRate();
+        if (feeAmount == null) {
+            feeLoan = BigDecimal.ZERO;
+        } else {
+            feeLoan = new BigDecimal(String.valueOf(feeAmount));
+        }
+
+        return new GenerateScheduleDTO(
+                loan.getCustomer().getFirstName(),
+                loan.getLoanAmount(),
+                loan.getLoanAccountNumber(),
+                loanScheduleItems,
+                totalInterest,
+                totalAmount,
+                loan.getLoanDate(),
+                endate,
+                loan.getLoanTerm(),
+                loan.getCreditOfficerName(),
+                loan.getInterestRate(),
+                loan.getLoanScheduleType().getDescription(),
+                feeLoan
+        );
     }
 
-    private BigDecimal calculateMonthlyPayment(BigDecimal loanAmount, BigDecimal monthlyInterestRate, int loanTerm) {
+        private BigDecimal calculateMonthlyPayment(BigDecimal loanAmount, BigDecimal monthlyInterestRate, int loanTerm) {
         BigDecimal temp = BigDecimal.ONE.add(monthlyInterestRate).pow(loanTerm);
         return loanAmount.multiply(monthlyInterestRate).multiply(temp).divide(temp.subtract(BigDecimal.ONE), 2, BigDecimal.ROUND_HALF_UP);
+    }
+
+//    private BigDecimal roundDecimal(BigDecimal value) {
+//        return value.setScale(0, RoundingMode.HALF_UP);
+//    }
+
+    private BigDecimal roundDecimal(BigDecimal value) {
+        if (value.scale() > 0 && value.remainder(BigDecimal.ONE).compareTo(new BigDecimal("0.5")) >= 0) {
+            return value.setScale(0, RoundingMode.UP);
+        } else {
+            return value.setScale(0, RoundingMode.DOWN);
+        }
     }
 public String generateAccountNumber(String brandCode) {
     String accountNumber;
