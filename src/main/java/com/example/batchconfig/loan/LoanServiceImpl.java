@@ -45,14 +45,9 @@ public class LoanServiceImpl implements LoanService {
         loan.setLoanDate(LocalDate.now());
         loan.setCreditOfficerName(loanRequestDTO.getCreditOfficerName());
         loan.setLoanScheduleType(LoanSheduleTypeCodeq.valueOf(loanRequestDTO.getLaonType()));
+        loan.setRegisterTellerId(userAuthenticationUtils.getUserRequestDTO().getUserId());
+        loan.setRegisterTellerName(userAuthenticationUtils.getUserRequestDTO().getUsername());
         loanRepository.save(loan);
-
-//        // register into table transaction
-//        LoanTransactions loanTransactions=new LoanTransactions();
-//        loanTransactions.setFirstBalance(loan.getLoanAmount());
-//        loanTransactions.setLoan(loan.getLoanAccountNumber());
-//        transactionRepository.save(loanTransactions);
-
         // response to client
         LoanReposeDTO loanReposeDTO = new LoanReposeDTO();
         loanReposeDTO.setLoanAmount(loanRequestDTO.getLoanAmount());

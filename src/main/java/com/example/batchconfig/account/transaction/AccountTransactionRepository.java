@@ -11,4 +11,5 @@ import java.util.List;
 public interface AccountTransactionRepository extends JpaRepository<AccountTransaction, Long> {
     @Query("SELECT COALESCE(MAX(p.transactionSeqNo), 0) FROM AccountTransaction p WHERE p.accountId = :accountId")
     Long findMaxSeqNoByAccountId(@Param("accountId") String accountId);
+    List<AccountTransaction> findByAccountId(String accountId);
 }

@@ -9,5 +9,4 @@ public class AccountRequestDTO {
     private String brandCode;
     private BigDecimal balance;
     private String accountType;
-    private Integer userId;
 }

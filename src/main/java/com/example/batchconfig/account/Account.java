@@ -26,8 +26,7 @@ public class Account {
     private String accountType;
     private BigDecimal firstAmount;
     private BigDecimal lastAmount;
-    @OneToOne
-    private User user;
+    private Integer userId;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

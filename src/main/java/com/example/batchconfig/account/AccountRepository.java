@@ -21,5 +21,10 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Transactional
     @Query("UPDATE Account a SET a.balance = :balance, a.lastAmount = :lastAmount WHERE a.accountNumber = :accountNumber")
     void updateAccountWithdrawal(String accountNumber, BigDecimal balance, BigDecimal lastAmount);
+    Optional<Account> findByUserId(Integer userId);
+    @Query("SELECT a FROM Account a WHERE a.accountNumber = :accountNumber")
+    Account retrieveAccountByAccountNumber(String accountNumber);
+    boolean existsByAccountNumber(String accountNumber);
+
 
 }

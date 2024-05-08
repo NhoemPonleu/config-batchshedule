@@ -3,6 +3,7 @@ package com.example.batchconfig.loan;
 import com.example.batchconfig.brand.Brand;
 import com.example.batchconfig.customer.Customer;
 import com.example.batchconfig.loan.transaction.LoanSheduleTypeCodeq;
+import com.example.batchconfig.security.user.UserRequestDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,8 @@ public class Loan {
     private String creditOfficerName;
     @Enumerated(EnumType.STRING)
     private LoanSheduleTypeCodeq loanScheduleType;
+    private Integer registerTellerId;
+    private String registerTellerName;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
