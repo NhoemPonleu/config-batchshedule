@@ -97,12 +97,13 @@ public String generateAccountNumber(String brandCode) {
 
     @Override
     public Account findAccountById(Long id) {
-        return null;
+    Account account=  accountRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("Account",id));
+   return account;
     }
 @Override
     public List<TransactionResposnDTO> getTransactions(String accountId) {
         Account account = accountRepository.findByAccountNumber(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException1("Account", accountId));
+                .orElseThrow(() -> new ResourceNotFoundException1("Account","", accountId));
 
         List<AccountTransaction> transactions = accountTransactionRepository.findByAccountId(account.getAccountNumber());
 

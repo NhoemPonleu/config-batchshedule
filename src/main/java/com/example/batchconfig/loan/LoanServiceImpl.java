@@ -61,7 +61,7 @@ public class LoanServiceImpl implements LoanService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         List<LoanScheduleItem> loanScheduleItems = new ArrayList<>();
         Loan loan = loanRepository.findByLoanAccountNumber(requestSheduleDTO.getLoanId())
-                .orElseThrow(() -> new ResourceNotFoundException1("Loan", requestSheduleDTO.getLoanId()));
+                .orElseThrow(() -> new ResourceNotFoundException1("Loan","", requestSheduleDTO.getLoanId()));
 
         BigDecimal remainingBalance = loan.getLoanAmount();
         BigDecimal annualInterestRate = BigDecimal.valueOf(loan.getLoanPercentage());
@@ -167,7 +167,7 @@ public String generateAccountNumber(String brandCode) {
     @Override
     public void loanRepayment(String loanAccountNumber, BigDecimal repaymentAmount) {
         Loan loan = loanRepository.findByLoanAccountNumber(loanAccountNumber)
-                .orElseThrow(() -> new ResourceNotFoundException1("Loan", loanAccountNumber));
+                .orElseThrow(() -> new ResourceNotFoundException1("Loan","", loanAccountNumber));
 //        if (loan.getLoanAmount().compareTo(repaymentAmount) < 0) {
 //            throw new InvalidRepaymentException("Repayment amount exceeds remaining loan amount");
 //        }

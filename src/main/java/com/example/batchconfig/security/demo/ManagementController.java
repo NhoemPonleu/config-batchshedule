@@ -108,7 +108,7 @@ public class ManagementController {
         Account senderAccount = accountRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Sender account not found"));
         Account sender1=accountRepository.findByAccountNumber(senderAccount.getAccountNumber() )
-                .orElseThrow(() -> new ResourceNotFoundException1("Sender account not found", senderAccount.getAccountNumber()));
+                .orElseThrow(() -> new ResourceNotFoundException1("Sender account not found","", senderAccount.getAccountNumber()));
         Account transferResponse =accountService.findAccountByAccountNumber(sender1.getAccountNumber());
 
         return BaseApi.<Account>builder()
@@ -125,7 +125,7 @@ public class ManagementController {
         Account senderAccount = accountRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Sender account not found"));
         Account sender1=accountRepository.findByAccountNumber(senderAccount.getAccountNumber() )
-                .orElseThrow(() -> new ResourceNotFoundException1("Sender account not found", senderAccount.getAccountNumber()));
+                .orElseThrow(() -> new ResourceNotFoundException1("Sender account not found","", senderAccount.getAccountNumber()));
    //     Account transferResponse =accountService.findAccountByAccountNumber(sender1.getAccountNumber());
 
         List<TransactionResposnDTO> transactions = accountService.getTransactions(sender1.getAccountNumber());

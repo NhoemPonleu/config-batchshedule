@@ -27,6 +27,7 @@ public class Account {
     private BigDecimal firstAmount;
     private BigDecimal lastAmount;
     private Integer userId;
+    private String accountStatusYN;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

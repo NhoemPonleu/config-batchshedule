@@ -7,14 +7,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 @Getter
 @Setter
-public class ResourceNotFoundException1 extends ApiExceptionResponseMessage {
-    private String resourceName;
+public class CheckStatuError extends ApiExceptionResponseMessage {
     private String resourceId;
 
-    public ResourceNotFoundException1(String message, String resourceName, String resourceId) {
+    public CheckStatuError(String message, String resourceId) {
         super(HttpStatus.NOT_FOUND, message);
-        this.resourceName = resourceName;
         this.resourceId = resourceId;
     }
 }
-

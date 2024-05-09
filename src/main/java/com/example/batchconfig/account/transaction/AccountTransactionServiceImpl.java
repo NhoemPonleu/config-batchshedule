@@ -3,9 +3,13 @@ package com.example.batchconfig.account.transaction;
 import com.example.batchconfig.account.Account;
 import com.example.batchconfig.account.AccountRepository;
 import com.example.batchconfig.account.AccountService;
+import com.example.batchconfig.account.transaction.transfer.DepositRequestDTO;
+import com.example.batchconfig.account.transaction.transfer.DepositResponseDTO;
 import com.example.batchconfig.account.transaction.transfer.TransferRequestDTO;
 import com.example.batchconfig.account.transaction.transfer.TransferResponse;
 import com.example.batchconfig.brand.brandShedule.TellerTypeCode;
+import com.example.batchconfig.exception.CheckStatuError;
+import com.example.batchconfig.exception.ResourceNotFoundException;
 import com.example.batchconfig.exception.ResourceNotFoundException1;
 import com.example.batchconfig.util.UserAuthenticationUtils;
 import jakarta.transaction.Transactional;
@@ -15,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -121,7 +124,7 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
         Account senderAccount = accountRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Sender account not found"));
        Account sender1=accountRepository.findByAccountNumber(senderAccount.getAccountNumber() )
-               .orElseThrow(() -> new ResourceNotFoundException1("Sender account not found", senderAccount.getAccountNumber()));
+               .orElseThrow(() -> new ResourceNotFoundException1("Sender account not found","", senderAccount.getAccountNumber()));
         Account receiverAccount = accountRepository.findByAccountNumber(transferRequest.getReceiverAccountId())
                 .orElseThrow(() -> new IllegalArgumentException("Receiver account not found"));
 
@@ -169,8 +172,38 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
         Account senderAccount = accountRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Sender account not found"));
         Account sender1=accountRepository.findByAccountNumber(senderAccount.getAccountNumber() )
-                .orElseThrow(() -> new ResourceNotFoundException1("Sender account not found", senderAccount.getAccountNumber()));
+                .orElseThrow(() -> new ResourceNotFoundException1("Sender account not found","", senderAccount.getAccountNumber()));
         return accountRepository.retrieveAccountByAccountNumber(sender1.getAccountNumber());
+    }
+
+    @Override
+    public DepositResponseDTO registerAccountDeposit(DepositRequestDTO depositRequestDTO) {
+        Integer userId = userAuthenticationUtils.getUserRequestDTO().getUserId();
+        Account senderAccount = accountRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Sender account not found"));
+        Account sender1=accountRepository.findByAccountNumber(senderAccount.getAccountNumber() )
+                .orElseThrow(() -> new ResourceNotFoundException1("Sender account not found","", senderAccount.getAccountNumber()));
+        if (!"Y".equals(sender1.getAccountStatusYN())) {
+            logger.warn("account status nor normal");
+            throw new CheckStatuError("account not normal", sender1.getAccountNumber());
+        }
+        AccountTransaction accountTransaction = new AccountTransaction();
+        accountTransaction.setAccountId(sender1.getAccountNumber());
+        accountTransaction.setTransactionAmount(depositRequestDTO.getDepositAmount());
+        accountTransaction.setTransactionDate(LocalDate.now());
+        accountTransaction.setTransactionType(TransactionType.DEPOSIT_ACCOUNT.getCode());
+        accountTransaction.setTransactionTotalAmount(depositRequestDTO.getDepositAmount());
+        accountTransactionRepository.save(accountTransaction);
+        BigDecimal newBalance = sender1.getBalance().add(depositRequestDTO.getDepositAmount());
+        sender1.setBalance(newBalance);
+        accountRepository.save(sender1);
+        DepositResponseDTO  depositResponseDTO = new DepositResponseDTO();
+        depositResponseDTO.setTransactionDate(LocalDate.now());
+        depositResponseDTO.setDepositAmount(depositResponseDTO.getDepositAmount());
+        depositResponseDTO.setTransactionType(TransactionType.DEPOSIT_ACCOUNT.getDescription());
+        depositResponseDTO.setTransactionDate(LocalDate.now());
+        depositResponseDTO.setTransactionTime(LocalTime.now());
+        return depositResponseDTO;
     }
 
 
