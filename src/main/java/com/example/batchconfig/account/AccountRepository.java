@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,6 +28,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     boolean existsByAccountNumber(String accountNumber);
     @Query("SELECT DISTINCT a FROM Account a JOIN FETCH a.loans")
     List<Account> findAllWithLoans();
+    @Query("SELECT a.accountNumber FROM Account a WHERE a.customer.id = :customerId")
+    List<String> findAccountNumbersByCustomerId(@Param("customerId") Long customerId);
 
 
 }

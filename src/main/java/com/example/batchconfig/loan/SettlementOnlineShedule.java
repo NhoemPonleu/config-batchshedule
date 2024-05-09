@@ -11,7 +11,7 @@ public class SettlementOnlineShedule {
     @Autowired
     private LoanService loanService;
 
-    @Scheduled(fixedRate = 60000) // Runs every 1 minute
+   // @Scheduled(fixedRate = 60000) // Runs every 1 minute
     public void runSettlementAutoLoan() {
         loanService.settleLoansForDepositAccounts();
     }

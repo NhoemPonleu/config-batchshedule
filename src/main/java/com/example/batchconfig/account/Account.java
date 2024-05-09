@@ -1,5 +1,7 @@
 package com.example.batchconfig.account;
 
+import com.example.batchconfig.customer.Customer;
+import com.example.batchconfig.loan.AccountDeposit;
 import com.example.batchconfig.loan.Loan;
 import com.example.batchconfig.security.user.User;
 import jakarta.persistence.*;
@@ -31,8 +33,16 @@ public class Account {
     private BigDecimal lastAmount;
     private Integer userId;
     private String accountStatusYN;
+
     @OneToMany(mappedBy = "account")
     private Set<Loan> loans;
+
+    @OneToMany(mappedBy = "account")
+    private Set<AccountDeposit> accountDeposits; // Link with AccountDeposit
+
+    @ManyToOne // Many accounts can belong to one customer
+    @JoinColumn(name = "customer_id")
+    private Customer customer; // Link with Customer
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

@@ -41,15 +41,27 @@ public class LoanServiceImpl implements LoanService {
     private final CustomerRepository customerRepository;
     private final AccountRepository accountRepository;
     private final AccountTransactionRepository accountTransactionRepository;
-    @Autowired
-    private UserAuthenticationUtils userAuthenticationUtils;
+    private final AccountDepositRepository accountDepositRepository;
+    private final UserAuthenticationUtils userAuthenticationUtils;
 
     @Override
-    public LoanReposeDTO registerNewLoan(LoanRequestDTO loanRequestDTO) {
-       Optional<Customer> customer= customerRepository.findById(loanRequestDTO.getCustomerId());
+    public LoanReposeDTO  registerNewLoan(LoanRequestDTO loanRequestDTO) {
+        Optional<Customer> customerOptional = customerRepository.findById(loanRequestDTO.getCustomerId());
+         List<String> accounts=accountRepository.findAccountNumbersByCustomerId(loanRequestDTO.getCustomerId());
+         String accountNumber= accounts.get(0);
+        Account account = accountRepository.findById(Long.valueOf(accountNumber)).orElse(null);
+
+        if (customerOptional.isEmpty()) {
+            // Handle the case where customer is not found
+            // For example, throw an exception or return an error response
+        }
+
+        Customer customer = customerOptional.get();
+
+        // Create a new loan
         Loan loan = new Loan();
-        Double percentage=loanRequestDTO.getInterestRate()* loanRequestDTO.getLoanTerm()/100;
-        String accountNumber = generateAccountNumber(loanRequestDTO.getBrandId());
+        Double percentage = loanRequestDTO.getInterestRate() * loanRequestDTO.getLoanTerm() / 100;
+     //   String accountNumber = generateAccountNumber(loanRequestDTO.getBrandId());
         loan.setLoanAmount(loanRequestDTO.getLoanAmount());
         loan.setLoanTerm(loanRequestDTO.getLoanTerm());
         loan.setInterestRate(loanRequestDTO.getInterestRate());
@@ -60,16 +72,31 @@ public class LoanServiceImpl implements LoanService {
         loan.setLoanScheduleType(LoanSheduleTypeCodeq.valueOf(loanRequestDTO.getLaonType()));
         loan.setRegisterTellerId(userAuthenticationUtils.getUserRequestDTO().getUserId());
         loan.setRegisterTellerName(userAuthenticationUtils.getUserRequestDTO().getUsername());
-        loan.setCustomer(customer.get());
-        loan.setIdentityNo(customer.get().getIdentity());
+        loan.setCustomer(customer);
+        loan.setIdentityNo(customer.getIdentity());
         loanRepository.save(loan);
-        // response to client
-        LoanReposeDTO loanReposeDTO = new LoanReposeDTO();
-        loanReposeDTO.setLoanAmount(loanRequestDTO.getLoanAmount());
-        loanReposeDTO.setLoanTerm(loanRequestDTO.getLoanTerm());
-        loanReposeDTO.setLoanAccountNumber(loan.getLoanAccountNumber());
-        return loanReposeDTO;
+     //   Account account = loan.getAccount();
+
+        // Create a new account deposit linked to the loan
+        AccountDeposit accountDeposit = new AccountDeposit();
+        accountDeposit.setAccount(account);
+        accountDeposit.setDepositAmount(loanRequestDTO.getLoanAmount()); // Assuming deposit amount is the same as loan amount
+        accountDeposit.setDepositDate(LocalDate.now()); // Assuming deposit date is same as loan date
+        accountDeposit.setLoan(loan);
+        // You may need to set other properties of account deposit
+
+        // Save the account deposit
+        accountDepositRepository.save(accountDeposit);
+
+        // Prepare response to client
+        LoanReposeDTO  loanResponseDTO = new LoanReposeDTO ();
+        loanResponseDTO.setLoanAmount(loanRequestDTO.getLoanAmount());
+        loanResponseDTO.setLoanTerm(loanRequestDTO.getLoanTerm());
+        loanResponseDTO.setLoanAccountNumber(loan.getLoanAccountNumber());
+
+        return loanResponseDTO;
     }
+
 
     @Override
     public GenerateScheduleDTO generateLoanSchedule(RequestSheduleDTO requestSheduleDTO) {
