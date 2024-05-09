@@ -25,6 +25,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("SELECT a FROM Account a WHERE a.accountNumber = :accountNumber")
     Account retrieveAccountByAccountNumber(String accountNumber);
     boolean existsByAccountNumber(String accountNumber);
+    @Query("SELECT DISTINCT a FROM Account a JOIN FETCH a.loans")
+    List<Account> findAllWithLoans();
 
 
 }

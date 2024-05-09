@@ -29,6 +29,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -239,28 +240,48 @@ public String generateAccountNumber(String brandCode) {
     public void settleLoansForDepositAccounts() {
         System.out.println("Batch job started at: " + LocalDateTime.now());
 
-        // Get all accounts
-        List<Account> accounts = accountRepository.findAll();
+        // Get all accounts with their loans eagerly fetched
+        List<Account> accounts = accountRepository.findAllWithLoans();
 
         for (Account account : accounts) {
             // Check if the account has a linked loan
-            Loan loan = (Loan) account.getLoans();
-            if (loan != null) {
-                // Perform loan settlement
-                BigDecimal settlementAmount = loan.getLoanAmount();
-                account.setBalance(account.getBalance().subtract(settlementAmount));
-             //   loan.setStatus(LoanStatus.SETTLED);
+            Set<Loan> loans = account.getLoans();
+            if (loans != null && !loans.isEmpty()) {
+                // Perform loan settlement for each loan
+                for (Loan loan : loans) {
+                    BigDecimal loanAmount = loan.getLoanAmount();
+                    BigDecimal depositBalance = account.getBalance();
 
-                // Save changes to entities
-                accountRepository.save(account);
-                loanRepository.save(loan);
+                    // Calculate the settlement amount
+                    BigDecimal settlementAmount = depositBalance.min(loanAmount); // Settle up to the loan amount or deposit balance, whichever is smaller
 
-                // Create a transaction record
-                AccountTransaction transaction = new AccountTransaction();
-                transaction.setAccountId(account.getAccountNumber());
-                transaction.setTransactionAmount(settlementAmount.negate()); // Withdrawal
-                transaction.setTransactionDate(LocalDate.now());
-                accountTransactionRepository.save(transaction);
+                    if (settlementAmount.compareTo(BigDecimal.ZERO) > 0) {
+                        // Update account balance
+                        account.setBalance(depositBalance.subtract(settlementAmount));
+
+                        // Update loan amount
+                        loan.setLoanAmount(loanAmount.subtract(settlementAmount));
+
+                        // Save changes to entities
+                        accountRepository.save(account);
+                        loanRepository.save(loan);
+
+                        // Create a transaction record
+                        AccountTransaction transaction = new AccountTransaction();
+                        transaction.setAccountId(account.getAccountNumber());
+                        transaction.setTransactionAmount(settlementAmount.negate()); // Withdrawal
+                        transaction.setTransactionDate(LocalDate.now());
+                        accountTransactionRepository.save(transaction);
+
+                        System.out.println("Settled loan amount: " + settlementAmount + " for loan account: " + loan.getLoanAccountNumber());
+                    }
+
+                    // Check if loan is fully settled
+                    if (loan.getLoanAmount().compareTo(BigDecimal.ZERO) <= 0) {
+                        System.out.println("Loan fully settled for account: " + loan.getLoanAccountNumber());
+                        break; // Stop processing this loan
+                    }
+                }
             }
         }
 

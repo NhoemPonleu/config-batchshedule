@@ -37,7 +37,7 @@ public class Loan {
     private String registerTellerName;
     private Integer identityNo;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "loan_account_number", referencedColumnName = "accountNumber")
+    @JoinColumn(name = "account_number") // specify the join column name
     private Account account;
 
     @ManyToOne

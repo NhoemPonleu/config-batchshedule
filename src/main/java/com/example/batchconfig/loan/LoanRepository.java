@@ -11,8 +11,8 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     boolean existsByLoanAccountNumber(String accountNumber);
     Optional<Loan> findByLoanAccountNumber(String loanAccountNumber);
     List<Loan> findByIdentityNo(Integer identityNo);
-    List<Loan> findByDepositAccountNumberIn(List<String> depositAccountNumbers);
-    @Query("SELECT l FROM Loan l JOIN l.account a WHERE a.accountNumber = :accountNumber")
-    Loan findByAccountAccountNumber(@Param("accountNumber") String accountNumber);
+//    List<Loan> findByDepositAccountNumberIn(List<String> depositAccountNumbers);
+//    @Query("SELECT l FROM Loan l JOIN l.account a WHERE a.accountNumber = :accountNumber")
+//    Loan findByAccountAccountNumber(@Param("accountNumber") String accountNumber);
 
 }
