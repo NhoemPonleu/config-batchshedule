@@ -9,6 +9,7 @@ import com.example.batchconfig.account.transaction.transfer.TransferRequestDTO;
 import com.example.batchconfig.account.transaction.transfer.TransferResponse;
 import com.example.batchconfig.brand.brandShedule.TellerTypeCode;
 import com.example.batchconfig.exception.CheckStatuError;
+import com.example.batchconfig.exception.InsufficientBalanceException;
 import com.example.batchconfig.exception.ResourceNotFoundException;
 import com.example.batchconfig.exception.ResourceNotFoundException1;
 import com.example.batchconfig.util.UserAuthenticationUtils;
@@ -78,12 +79,23 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
 
         return count;
     }
-
-    @Override
-    public AccountWithdrawalResponse withdrawAccountTransaction(WithdrawalRequestDTO withdrawalRequestDTO) {
+    private Account validationAccount(WithdrawalRequestDTO withdrawalRequestDTO){
         // Find the account by its account number
         Account account = accountService.findAccountByAccountNumber(withdrawalRequestDTO.getAccountId());
-          AccountWithdrawalResponse accountWithdrawalResponse = new AccountWithdrawalResponse();
+        if(account.getBalance().compareTo(withdrawalRequestDTO.getTransactionAmount())<0){
+            logger.warn("Insufficient balance for withdrawal: " + withdrawalRequestDTO.getTransactionAmount());
+            throw new InsufficientBalanceException("Insufficient balance for withdrawal");
+        }
+        if(withdrawalRequestDTO.getTransactionAmount().compareTo(new BigDecimal(1000)) > 0){
+            logger.warn("withdrawal balance for withdrawal cannot bigger than 1000$");
+            throw new InsufficientBalanceException("Withdrwal Balance Cannot Bigger Than 1000$");
+        }
+        return account;
+    }
+    @Override
+    public AccountWithdrawalResponse withdrawAccountTransaction(WithdrawalRequestDTO withdrawalRequestDTO) {
+        Account account= validationAccount(withdrawalRequestDTO);
+        AccountWithdrawalResponse accountWithdrawalResponse = new AccountWithdrawalResponse();
         AccountWithdrawalResponse response = new AccountWithdrawalResponse();
         response.setAccountId(account.getAccountNumber());
         response.setTransactionAmount(withdrawalRequestDTO.getTransactionAmount());
@@ -184,8 +196,8 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
         Account sender1=accountRepository.findByAccountNumber(senderAccount.getAccountNumber() )
                 .orElseThrow(() -> new ResourceNotFoundException1("Sender account not found","", senderAccount.getAccountNumber()));
         if (!"Y".equals(sender1.getAccountStatusYN())) {
-            logger.warn("account status nor normal");
-            throw new CheckStatuError("account not normal", sender1.getAccountNumber());
+            logger.warn("Account status is not normal");
+            throw new CheckStatuError("Account not normal", "ResourceName", sender1.getAccountNumber());
         }
         AccountTransaction accountTransaction = new AccountTransaction();
         accountTransaction.setAccountId(sender1.getAccountNumber());
@@ -197,6 +209,13 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
         BigDecimal newBalance = sender1.getBalance().add(depositRequestDTO.getDepositAmount());
         sender1.setBalance(newBalance);
         accountRepository.save(sender1);
+        // Log transaction details
+        logger.warn("Transaction registered successfully: " +
+                "AccountId: " + accountTransaction.getAccountId() + ", " +
+                "TransactionAmount: " + accountTransaction.getTransactionAmount() + ", " +
+                "TransactionDate: " + accountTransaction.getTransactionDate() + ", " +
+                "TransactionType: " + accountTransaction.getTransactionType() + ", " +
+                "TransactionTotalAmount: " + accountTransaction.getTransactionTotalAmount());
         DepositResponseDTO  depositResponseDTO = new DepositResponseDTO();
         depositResponseDTO.setTransactionDate(LocalDate.now());
         depositResponseDTO.setDepositAmount(depositResponseDTO.getDepositAmount());
