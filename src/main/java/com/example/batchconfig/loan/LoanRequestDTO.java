@@ -10,5 +10,6 @@ public class LoanRequestDTO {
     private BigDecimal loanAmount;
     private String brandId;    private String creditOfficerName;
     private String laonType;
+    private Long customerId;
 
 }

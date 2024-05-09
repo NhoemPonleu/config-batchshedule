@@ -1,5 +1,11 @@
 package com.example.batchconfig.loan;
 
+import com.example.batchconfig.account.Account;
+import com.example.batchconfig.account.AccountRepository;
+import com.example.batchconfig.account.transaction.AccountTransaction;
+import com.example.batchconfig.account.transaction.AccountTransactionRepository;
+import com.example.batchconfig.customer.Customer;
+import com.example.batchconfig.customer.CustomerRepository;
 import com.example.batchconfig.exception.InvalidRepaymentException;
 import com.example.batchconfig.exception.ResourceNotFoundException;
 import com.example.batchconfig.exception.ResourceNotFoundException1;
@@ -18,9 +24,11 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -29,11 +37,15 @@ import java.util.concurrent.atomic.AtomicLong;
 public class LoanServiceImpl implements LoanService {
     private final LoanRepository loanRepository;
     private final TransactionRepository transactionRepository;
+    private final CustomerRepository customerRepository;
+    private final AccountRepository accountRepository;
+    private final AccountTransactionRepository accountTransactionRepository;
     @Autowired
     private UserAuthenticationUtils userAuthenticationUtils;
 
     @Override
     public LoanReposeDTO registerNewLoan(LoanRequestDTO loanRequestDTO) {
+       Optional<Customer> customer= customerRepository.findById(loanRequestDTO.getCustomerId());
         Loan loan = new Loan();
         Double percentage=loanRequestDTO.getInterestRate()* loanRequestDTO.getLoanTerm()/100;
         String accountNumber = generateAccountNumber(loanRequestDTO.getBrandId());
@@ -47,6 +59,8 @@ public class LoanServiceImpl implements LoanService {
         loan.setLoanScheduleType(LoanSheduleTypeCodeq.valueOf(loanRequestDTO.getLaonType()));
         loan.setRegisterTellerId(userAuthenticationUtils.getUserRequestDTO().getUserId());
         loan.setRegisterTellerName(userAuthenticationUtils.getUserRequestDTO().getUsername());
+        loan.setCustomer(customer.get());
+        loan.setIdentityNo(customer.get().getIdentity());
         loanRepository.save(loan);
         // response to client
         LoanReposeDTO loanReposeDTO = new LoanReposeDTO();
@@ -221,6 +235,48 @@ public String generateAccountNumber(String brandCode) {
             loanRepository.save(loan);
         }
     }
+
+    public void settleLoansForDepositAccounts() {
+        System.out.println("Batch job started at: " + LocalDateTime.now());
+
+        // Get all accounts
+        List<Account> accounts = accountRepository.findAll();
+
+        for (Account account : accounts) {
+            // Check if the account has a linked loan
+            Loan loan = (Loan) account.getLoans();
+            if (loan != null) {
+                // Perform loan settlement
+                BigDecimal settlementAmount = loan.getLoanAmount();
+                account.setBalance(account.getBalance().subtract(settlementAmount));
+             //   loan.setStatus(LoanStatus.SETTLED);
+
+                // Save changes to entities
+                accountRepository.save(account);
+                loanRepository.save(loan);
+
+                // Create a transaction record
+                AccountTransaction transaction = new AccountTransaction();
+                transaction.setAccountId(account.getAccountNumber());
+                transaction.setTransactionAmount(settlementAmount.negate()); // Withdrawal
+                transaction.setTransactionDate(LocalDate.now());
+                accountTransactionRepository.save(transaction);
+            }
+        }
+
+        System.out.println("Batch job completed at: " + LocalDateTime.now());
+    }
+
+//    @Override
+//    public void settleLoanOnline(String depositAccountNumber) {
+//        Loan loan = loanRepository.findByDepositAccountNumberIn(depositAccountNumber);
+//    }
+
+//    @Override
+//    public Loan findLoan(String loanAccountNumber) {
+//        return null;
+//    }
+
     private BigDecimal calculateAccruedInterest(Loan loan, LocalDate currentDate) {
         // Calculate the daily interest rate
         double dailyInterestRate = loan.getLoanPercentage() / 365;

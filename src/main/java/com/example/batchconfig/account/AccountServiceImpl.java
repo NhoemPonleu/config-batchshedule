@@ -4,8 +4,13 @@ import com.example.batchconfig.account.transaction.AccountTransaction;
 import com.example.batchconfig.account.transaction.AccountTransactionRepository;
 import com.example.batchconfig.account.transaction.TransactionType;
 import com.example.batchconfig.account.transaction.transfer.TransactionResposnDTO;
+import com.example.batchconfig.customer.Customer;
+import com.example.batchconfig.customer.CustomerRepository;
 import com.example.batchconfig.exception.ResourceNotFoundException;
 import com.example.batchconfig.exception.ResourceNotFoundException1;
+import com.example.batchconfig.loan.Loan;
+import com.example.batchconfig.loan.LoanRepository;
+import com.example.batchconfig.loan.LoanService;
 import com.example.batchconfig.security.user.User;
 import com.example.batchconfig.security.user.UserRepository;
 import com.example.batchconfig.util.UserAuthenticationUtils;
@@ -32,12 +37,34 @@ public class AccountServiceImpl implements AccountService {
     private final AccountTransactionRepository accountTransactionRepository;
     private final UserRepository userRepository;
     private final UserAuthenticationUtils userAuthenticationUtils;
+    private final LoanService loanService;
+    private final LoanRepository loanRepository;
+    private final CustomerRepository customerRepository;
     private final AtomicLong accountNumberSequence = new AtomicLong(1L);// Starting sequence number
 
     @Override
     public Account registerAccount(AccountRequestDTO accountRequestDTO) {
-   //    Optional<User> user= userRepository.findById(accountRequestDTO.getUserId());
         Account account = new Account();
+
+        // Find customer by identity card number
+        Customer customer = customerRepository.findByIdentity(accountRequestDTO.getIdentityCardNo());
+        if (customer == null) {
+            throw new ResourceNotFoundException("Customer not found for identity card number", accountRequestDTO.getIdentityCardNo().longValue());
+        }
+
+        // Find loans associated with the customer's identity
+        List<Loan> loanList = loanRepository.findByIdentityNo(accountRequestDTO.getIdentityCardNo());
+        if (!loanList.isEmpty()) {
+            // Assuming there can be only one loan for a customer
+            Loan loan = loanList.get(0);
+
+            // Link the loan account with the customer's deposit account
+          //  account.setLoan(loan);
+        } else {
+            // Handle the case where no loan is found
+        }
+
+        // Set account details
         String accountNumber = generateAccountNumber(accountRequestDTO.getBrandCode());
         account.setAccountType(accountRequestDTO.getAccountType());
         account.setBalance(accountRequestDTO.getBalance());
@@ -46,9 +73,9 @@ public class AccountServiceImpl implements AccountService {
         account.setFirstAmount(accountRequestDTO.getBalance());
         account.setLastAmount(accountRequestDTO.getBalance());
         account.setUserId(userAuthenticationUtils.getUserRequestDTO().getUserId());
-      //  account.setUser(user.get());
         account.setAccountNumber(accountNumber);
-        // register in transaction table
+
+        // Register in transaction table
         AccountTransaction accountTransaction = new AccountTransaction();
         Long maxSeqNo = accountTransactionRepository.findMaxSeqNoByAccountId(account.getAccountNumber());
         accountTransaction.setTransactionType(TransactionType.FIRST_REGISTER_ACCOUNT.getCode());
@@ -57,12 +84,13 @@ public class AccountServiceImpl implements AccountService {
         accountTransaction.setFirstAmount(accountRequestDTO.getBalance());
         accountTransaction.setAccountId(accountNumber);
         accountTransaction.setTransactionTime(LocalDateTime.now());
-        accountTransaction.setAcruedAmount(new BigDecimal(0));
-        accountTransaction.setAcruedInterest(new BigDecimal(0));
+        accountTransaction.setAcruedAmount(BigDecimal.ZERO);
+        accountTransaction.setAcruedInterest(BigDecimal.ZERO);
         accountTransactionRepository.save(accountTransaction);
+
+        // Save the account
         return accountRepository.save(account);
     }
-
 
     private final ConcurrentHashMap<String, Boolean> accountNumbersMap = new ConcurrentHashMap<>();
 

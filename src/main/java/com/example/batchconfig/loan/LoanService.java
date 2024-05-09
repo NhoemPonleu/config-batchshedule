@@ -12,4 +12,6 @@ public interface LoanService {
     void loanRepayment(String loanAccountNumber, BigDecimal repaymentAmount);
     List<Loan> listOfLoan();
     void accruedInterestEveryday();
+   // Loan findLoan(String loanAccountNumber);
+   void settleLoansForDepositAccounts();
 }

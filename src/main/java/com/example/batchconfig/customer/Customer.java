@@ -18,6 +18,7 @@ public class Customer {
     private Long id;
     private String firstName;
     private String lastName;
+    private Integer identity;
     private String address;
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Village> villages = new ArrayList<>();

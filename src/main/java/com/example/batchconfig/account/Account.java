@@ -1,5 +1,6 @@
 package com.example.batchconfig.account;
 
+import com.example.batchconfig.loan.Loan;
 import com.example.batchconfig.security.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -12,6 +13,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -28,6 +31,8 @@ public class Account {
     private BigDecimal lastAmount;
     private Integer userId;
     private String accountStatusYN;
+    @OneToMany(mappedBy = "account")
+    private Set<Loan> loans;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

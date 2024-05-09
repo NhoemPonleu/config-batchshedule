@@ -1,5 +1,6 @@
 package com.example.batchconfig.loan;
 
+import com.example.batchconfig.account.Account;
 import com.example.batchconfig.brand.Brand;
 import com.example.batchconfig.customer.Customer;
 import com.example.batchconfig.loan.transaction.LoanSheduleTypeCodeq;
@@ -34,6 +35,10 @@ public class Loan {
     private LoanSheduleTypeCodeq loanScheduleType;
     private Integer registerTellerId;
     private String registerTellerName;
+    private Integer identityNo;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "loan_account_number", referencedColumnName = "accountNumber")
+    private Account account;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")

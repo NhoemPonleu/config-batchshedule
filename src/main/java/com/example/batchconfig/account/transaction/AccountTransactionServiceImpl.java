@@ -79,7 +79,7 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
 
         return count;
     }
-    private Account validationAccount(WithdrawalRequestDTO withdrawalRequestDTO){
+    private Account validationAccountWithdrwal(WithdrawalRequestDTO withdrawalRequestDTO){
         // Find the account by its account number
         Account account = accountService.findAccountByAccountNumber(withdrawalRequestDTO.getAccountId());
         if(account.getBalance().compareTo(withdrawalRequestDTO.getTransactionAmount())<0){
@@ -94,7 +94,7 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
     }
     @Override
     public AccountWithdrawalResponse withdrawAccountTransaction(WithdrawalRequestDTO withdrawalRequestDTO) {
-        Account account= validationAccount(withdrawalRequestDTO);
+        Account account= validationAccountWithdrwal(withdrawalRequestDTO);
         AccountWithdrawalResponse accountWithdrawalResponse = new AccountWithdrawalResponse();
         AccountWithdrawalResponse response = new AccountWithdrawalResponse();
         response.setAccountId(account.getAccountNumber());
