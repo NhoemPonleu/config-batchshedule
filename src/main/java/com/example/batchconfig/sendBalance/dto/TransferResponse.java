@@ -1,6 +1,7 @@
 package com.example.batchconfig.sendBalance.dto;
 
 import com.example.batchconfig.security.user.UserRequestDTO;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -11,6 +12,7 @@ public class TransferResponse {
     private String senderPhoneNumber;
     private String receiverPhoneNumber;
     private BigDecimal transferAmount;
+    private Integer secureNumber;
     private BigDecimal feeAmount;
     private LocalDate transferDate;
     private LocalTime transferTime;

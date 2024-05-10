@@ -78,6 +78,7 @@ public class TransferServiceImpl implements TransferService {
         transferResponse.setSenderPhoneNumber(transferRequest.getSenderPhoneNumber());
         transferResponse.setReceiverPhoneNumber(transferRequest.getReceiverPhoneNumber());
         transferResponse.setTransferAmount(transferRequest.getTransferAmount());
+        transferResponse.setSecureNumber(password);
         transferResponse.setFeeAmount(feeAmount);
         transferResponse.setTransferDate(LocalDate.now());
         transferResponse.setUserRequestDTO(userAuthenticationUtils.getUserRequestDTO());
