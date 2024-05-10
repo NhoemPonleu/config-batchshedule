@@ -1,9 +1,5 @@
 package com.example.batchconfig.brand.brandShedule;
 
-import com.example.batchconfig.PersonDTO;
-import com.example.batchconfig.brand.BrandDTO;
-import com.example.batchconfig.brand.BrandService;
-import com.example.batchconfig.brand.BrandTransactionEveryDay;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

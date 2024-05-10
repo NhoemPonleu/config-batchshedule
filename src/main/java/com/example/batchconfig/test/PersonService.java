@@ -1,6 +1,4 @@
-package com.example.batchconfig;
-
-import lombok.extern.java.Log;
+package com.example.batchconfig.test;
 
 import java.util.List;
 

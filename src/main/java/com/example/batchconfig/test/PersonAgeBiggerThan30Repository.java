@@ -1,4 +1,4 @@
-package com.example.batchconfig;
+package com.example.batchconfig.test;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

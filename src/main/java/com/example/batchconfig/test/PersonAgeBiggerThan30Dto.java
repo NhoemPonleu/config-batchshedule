@@ -1,6 +1,5 @@
-package com.example.batchconfig;
+package com.example.batchconfig.test;
 
-import jakarta.persistence.ManyToOne;
 import lombok.Data;
 
 @Data

@@ -1,4 +1,4 @@
-package com.example.batchconfig;
+package com.example.batchconfig.test;
 
 import lombok.Data;
 

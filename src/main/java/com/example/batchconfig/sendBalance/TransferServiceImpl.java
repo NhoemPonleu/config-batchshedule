@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Currency;
 import java.util.Random;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -47,7 +48,7 @@ public class TransferServiceImpl implements TransferService {
         transfer.setTransferStatus(TransferTypeCode.NORMAL.getCode());
         transfer.setWithdrawalYN("N");
 
-        BigDecimal feeAmount = BigDecimal.ZERO;
+        BigDecimal feeAmount = BigDecimal.ZERO ;
         if (transferRequest.getFeeTypeCode().equals(FeeTypeCode.RECEIVER.getCode())) {
             if (transferRequest.getTransferAmount().compareTo(BigDecimal.valueOf(1000)) > 0) {
                 feeAmount = transferRequest.getTransferAmount().multiply(BigDecimal.valueOf(0.02)); // 2% fee

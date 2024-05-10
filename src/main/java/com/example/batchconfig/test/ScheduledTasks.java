@@ -1,4 +1,4 @@
-package com.example.batchconfig;
+package com.example.batchconfig.test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;

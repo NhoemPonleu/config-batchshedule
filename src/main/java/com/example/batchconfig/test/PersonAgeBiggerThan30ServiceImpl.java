@@ -1,4 +1,4 @@
-package com.example.batchconfig;
+package com.example.batchconfig.test;
 
 import com.example.batchconfig.brand.Brand;
 import com.example.batchconfig.brand.BrandService;
