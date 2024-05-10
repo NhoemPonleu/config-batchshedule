@@ -49,19 +49,25 @@ public class AccountServiceImpl implements AccountService {
         // Find customer by identity card number
         Customer customer = customerRepository.findByIdentity(accountRequestDTO.getIdentityCardNo());
         if (customer == null) {
-            throw new ResourceNotFoundException("Customer not found for identity card number", accountRequestDTO.getIdentityCardNo().longValue());
-        }
-
-        // Find loans associated with the customer's identity
-        List<Loan> loanList = loanRepository.findByIdentityNo(accountRequestDTO.getIdentityCardNo());
-        if (!loanList.isEmpty()) {
-            // Assuming there can be only one loan for a customer
-            Loan loan = loanList.get(0);
-
-            // Link the loan account with the customer's deposit account
-          //  account.setLoan(loan);
+            // If customer is null, set loanAccountNumber to null and continue
+            account.setLoanAccountNumber(null);
         } else {
-            // Handle the case where no loan is found
+            // Find loans associated with the customer's identity
+            List<Loan> loanList = loanRepository.findByIdentityNo(accountRequestDTO.getIdentityCardNo());
+            if (!loanList.isEmpty()) {
+                // Assuming there can be only one loan for a customer
+                Loan loan = loanList.get(0);
+
+                // Set the loan account number if customer has the same identity and loan
+                if (loan.getCustomer().getIdentity().equals(accountRequestDTO.getIdentityCardNo())) {
+                    account.setLoanAccountNumber(loan.getLoanAccountNumber());
+                } else {
+                    account.setLoanAccountNumber(null); // Set loan account to null if customer has a different loan
+                }
+            } else {
+                // Set loan account to null if no loan is found
+                account.setLoanAccountNumber(null);
+            }
         }
 
         // Set account details
@@ -84,8 +90,6 @@ public class AccountServiceImpl implements AccountService {
         accountTransaction.setFirstAmount(accountRequestDTO.getBalance());
         accountTransaction.setAccountId(accountNumber);
         accountTransaction.setTransactionTime(LocalDateTime.now());
-        accountTransaction.setAcruedAmount(BigDecimal.ZERO);
-        accountTransaction.setAcruedInterest(BigDecimal.ZERO);
         accountTransactionRepository.save(accountTransaction);
 
         // Save the account

@@ -34,6 +34,9 @@ public class Account {
     private Integer userId;
     private String accountStatusYN;
 
+    // New attribute to store loan account number
+    private String loanAccountNumber;
+
     @OneToMany(mappedBy = "account")
     private Set<Loan> loans;
 
