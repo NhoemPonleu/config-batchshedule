@@ -66,7 +66,7 @@ public class TransferServiceImpl implements TransferService {
                 throw new CheckStatuErrorCode("Fee amount cannot be null or zero for sender fee type", transferRequest.getFeeTypeCode());
             }
             transfer.setFeeTypeCode(FeeTypeCode.SENDER);
-            BigDecimal afterTransferAmount = transferRequest.getTransferAmount().subtract(feeAmount);
+            BigDecimal afterTransferAmount = transferRequest.getTransferAmount();
             transfer.setTransferAmount(afterTransferAmount);
         }
         transfer.setUserRegister(userAuthenticationUtils.getUserRequestDTO().getUserId());
