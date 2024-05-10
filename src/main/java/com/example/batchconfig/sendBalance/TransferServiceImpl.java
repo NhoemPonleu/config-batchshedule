@@ -18,10 +18,17 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Random;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
 public class TransferServiceImpl implements TransferService {
+    Logger logger = Logger.getLogger(this.getClass().getName());
+    // Get the current stack trace
+    StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+
+    // The method name is the second element in the stack trace
+    String methodName = stackTraceElements[2].getMethodName();
     private final UserAuthenticationUtils userAuthenticationUtils;
     private final TransferRepository transferRepository;
     private final TransactionDetailsRepository transactionDetailsRepository;
@@ -41,17 +48,29 @@ public class TransferServiceImpl implements TransferService {
         transfer.setWithdrawalYN("N");
 
         BigDecimal feeAmount = BigDecimal.ZERO;
-        if (transferRequest.getFeeTypeCode().equals(FeeTypeCode.RECEIVER.getCode()) && transferRequest.getTransferAmount().compareTo(BigDecimal.valueOf(1000)) > 0) {
-            feeAmount = transferRequest.getTransferAmount().multiply(BigDecimal.valueOf(0.02)); // 2% fee
+        if (transferRequest.getFeeTypeCode().equals(FeeTypeCode.RECEIVER.getCode())) {
+            if (transferRequest.getTransferAmount().compareTo(BigDecimal.valueOf(1000)) > 0) {
+                feeAmount = transferRequest.getTransferAmount().multiply(BigDecimal.valueOf(0.02)); // 2% fee
+            } else {
+                feeAmount = transferRequest.getTransferAmount().multiply(BigDecimal.valueOf(0.01)); // 1% fee
+            }
             transfer.setFeeTypeCode(FeeTypeCode.RECEIVER);
-            BigDecimal afterFee=transferRequest.getTransferAmount().subtract(feeAmount);
+            BigDecimal afterFee = transferRequest.getTransferAmount().subtract(feeAmount);
             transfer.setTransferAmount(afterFee);
         } else if (transferRequest.getFeeTypeCode().equals(FeeTypeCode.SENDER.getCode())) {
-            feeAmount=transferRequest.getFeeAmount();
+            feeAmount = transferRequest.getFeeAmount();
+            if (feeAmount == null || feeAmount.compareTo(BigDecimal.ZERO) <= 0) {
+                logger.warning("Fee amount cannot be null or zero for sender fee type");
+                logger.info("Current method: " + methodName);
+                throw new CheckStatuErrorCode("Fee amount cannot be null or zero for sender fee type", transferRequest.getFeeTypeCode());
+            }
             transfer.setFeeTypeCode(FeeTypeCode.SENDER);
-            transfer.setTransferAmount(transferRequest.getTransferAmount());
+            BigDecimal afterTransferAmount = transferRequest.getTransferAmount().subtract(feeAmount);
+            transfer.setTransferAmount(afterTransferAmount);
         }
+        transfer.setUserRegister(userAuthenticationUtils.getUserRequestDTO().getUserId());
         transfer.setFeeAmount(feeAmount);
+        transferRepository.save(transfer);
         // response to client
         TransferResponse transferResponse = new TransferResponse();
         transferResponse.setTransferTime(LocalTime.now());
@@ -61,9 +80,6 @@ public class TransferServiceImpl implements TransferService {
         transferResponse.setFeeAmount(feeAmount);
         transferResponse.setTransferDate(LocalDate.now());
         transferResponse.setUserRequestDTO(userAuthenticationUtils.getUserRequestDTO());
-        transfer.setUserRegister(userAuthenticationUtils.getUserRequestDTO().getUserId());
-        transferRepository.save(transfer);
-
         return transferResponse;
     }
 
