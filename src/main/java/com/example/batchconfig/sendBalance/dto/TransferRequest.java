@@ -10,4 +10,6 @@ public class TransferRequest {
     private BigDecimal transferAmount;
     private BigDecimal feeAmount;
     private String feeTypeCode;
+    private String sendType;
+    private String toAccountNumber;
 }

@@ -1,5 +1,9 @@
 package com.example.batchconfig.sendBalance;
 
+import com.example.batchconfig.account.Account;
+import com.example.batchconfig.account.AccountRepository;
+import com.example.batchconfig.account.AccountService;
+import com.example.batchconfig.account.transaction.AccountTransactionRepository;
 import com.example.batchconfig.exception.InsufficientBalanceException;
 import com.example.batchconfig.sendBalance.constand.*;
 import com.example.batchconfig.sendBalance.dto.TransferRequest;
@@ -31,46 +35,100 @@ public class TransferServiceImpl implements TransferService {
     private final TransferRepository transferRepository;
     private final TransactionDetailsRepository transactionDetailsRepository;
     private final GeneratePasswordSenderUtil generateRandomPassword;
+    private final AccountService accountService;
+    private final AccountRepository accountRepository;
     @Override
     public TransferResponse send(TransferRequest transferRequest) {
-        Integer password=generateRandomPassword.generateRandomPassword();
+        Account recipientAccount = null;
+        if (!SendTypeCode.NORMAL.getCode().equals(transferRequest.getSendType())) {
+            recipientAccount = accountService.findAccountByAccountNumber(transferRequest.getToAccountNumber());
+        }
+        Integer password = generateRandomPassword.generateRandomPassword();
+
+        Transfer transfer = createTransfer(transferRequest, recipientAccount, password);
+        if (recipientAccount != null) {
+            updateRecipientAccountBalance(recipientAccount, transferRequest.getTransferAmount());
+        }
+
+        BigDecimal feeAmount = calculateFee(transferRequest, transfer);
+        transfer.setFeeAmount(feeAmount);
+
+        transferRepository.save(transfer);
+
+        return createTransferResponse(transferRequest, transfer, password, feeAmount);
+    }
+
+    private Transfer createTransfer(TransferRequest transferRequest, Account recipientAccount, Integer password) {
         Transfer transfer = new Transfer();
         transfer.setTransferDate(LocalDate.now());
-      //  transfer.setTransferAmount(transferRequest.getTransferAmount());
         transfer.setTransferTime(LocalTime.now());
-        transfer.setSenderPhoneNumber(transferRequest.getSenderPhoneNumber());
-        transfer.setReceiverPhoneNumber(transferRequest.getReceiverPhoneNumber());
         transfer.setAfterTransferAmount(transferRequest.getTransferAmount());
         transfer.setPassword(password);
         transfer.setUuidPassword(UUID.randomUUID());
         transfer.setTransferStatus(TransferTypeCode.NORMAL.getCode());
-        transfer.setWithdrawalYN("N");
 
-        BigDecimal feeAmount = BigDecimal.ZERO ;
-        if (transferRequest.getFeeTypeCode().equals(FeeTypeCode.RECEIVER.getCode())) {
-            if (transferRequest.getTransferAmount().compareTo(BigDecimal.valueOf(1000)) > 0) {
-                feeAmount = transferRequest.getTransferAmount().multiply(BigDecimal.valueOf(0.02)); // 2% fee
-            } else {
-                feeAmount = transferRequest.getTransferAmount().multiply(BigDecimal.valueOf(0.01)); // 1% fee
-            }
+        if (SendTypeCode.TO_ACCOUNT.getCode().equals(transferRequest.getSendType())) {
+            transfer.setToAccountNumber(transferRequest.getToAccountNumber());
+            transfer.setToAccountName(recipientAccount != null ? recipientAccount.getAccountName() : null);
+            transfer.setWithdrawalYN("Y");
+        } else if (SendTypeCode.NORMAL.getCode().equals(transferRequest.getSendType())) {
+            transfer.setSenderPhoneNumber(transferRequest.getSenderPhoneNumber());
+            transfer.setReceiverPhoneNumber(transferRequest.getReceiverPhoneNumber());
+            transfer.setToAccountNumber(null);
+            transfer.setToAccountName(null);
+            transfer.setWithdrawalYN("N");
+        } else {
+            throw new IllegalArgumentException("Unsupported send type: " + transferRequest.getSendType());
+        }
+
+        transfer.setUserRegister(userAuthenticationUtils.getUserRequestDTO().getUserId());
+
+        return transfer;
+    }
+
+    private void updateRecipientAccountBalance(Account recipientAccount, BigDecimal transferAmount) {
+        BigDecimal newBalance = recipientAccount.getBalance().add(transferAmount);
+        recipientAccount.setBalance(newBalance);
+        accountRepository.save(recipientAccount);
+    }
+
+    private BigDecimal calculateFee(TransferRequest transferRequest, Transfer transfer) {
+        BigDecimal feeAmount = BigDecimal.ZERO;
+
+        if (FeeTypeCode.RECEIVER.getCode().equals(transferRequest.getFeeTypeCode())) {
+            feeAmount = calculateReceiverFee(transferRequest);
             transfer.setFeeTypeCode(FeeTypeCode.RECEIVER);
             BigDecimal afterFee = transferRequest.getTransferAmount().subtract(feeAmount);
             transfer.setTransferAmount(afterFee);
-        } else if (transferRequest.getFeeTypeCode().equals(FeeTypeCode.SENDER.getCode())) {
-            feeAmount = transferRequest.getFeeAmount();
-            if (feeAmount == null || feeAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                logger.warning("Fee amount cannot be null or zero for sender fee type");
-                logger.info("Current method: " + methodName);
-                throw new CheckStatuErrorCode("Fee amount cannot be null or zero for sender fee type", transferRequest.getFeeTypeCode());
-            }
+        } else if (FeeTypeCode.SENDER.getCode().equals(transferRequest.getFeeTypeCode())) {
+            feeAmount = validateAndRetrieveSenderFee(transferRequest);
             transfer.setFeeTypeCode(FeeTypeCode.SENDER);
-            BigDecimal afterTransferAmount = transferRequest.getTransferAmount();
-            transfer.setTransferAmount(afterTransferAmount);
+            transfer.setTransferAmount(transferRequest.getTransferAmount());
         }
-        transfer.setUserRegister(userAuthenticationUtils.getUserRequestDTO().getUserId());
-        transfer.setFeeAmount(feeAmount);
-        transferRepository.save(transfer);
-        // response to client
+
+        return feeAmount;
+    }
+
+    private BigDecimal calculateReceiverFee(TransferRequest transferRequest) {
+        BigDecimal transferAmount = transferRequest.getTransferAmount();
+        if (transferAmount.compareTo(BigDecimal.valueOf(1000)) > 0) {
+            return transferAmount.multiply(BigDecimal.valueOf(0.02)); // 2% fee
+        } else {
+            return transferAmount.multiply(BigDecimal.valueOf(0.01)); // 1% fee
+        }
+    }
+
+    private BigDecimal validateAndRetrieveSenderFee(TransferRequest transferRequest) {
+        BigDecimal feeAmount = transferRequest.getFeeAmount();
+        if (feeAmount == null || feeAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            String errorMsg = "Fee amount cannot be null or zero for sender fee type";
+            logger.warning(errorMsg);
+            throw new CheckStatuErrorCode(errorMsg, transferRequest.getFeeTypeCode());
+        }
+        return feeAmount;
+    }
+
+    private TransferResponse createTransferResponse(TransferRequest transferRequest, Transfer transfer, Integer password, BigDecimal feeAmount) {
         TransferResponse transferResponse = new TransferResponse();
         transferResponse.setTransferTime(LocalTime.now());
         transferResponse.setSenderPhoneNumber(transferRequest.getSenderPhoneNumber());
@@ -80,6 +138,7 @@ public class TransferServiceImpl implements TransferService {
         transferResponse.setFeeAmount(feeAmount);
         transferResponse.setTransferDate(LocalDate.now());
         transferResponse.setUserRequestDTO(userAuthenticationUtils.getUserRequestDTO());
+
         return transferResponse;
     }
 

@@ -31,4 +31,6 @@ public class Transfer {
     private UUID uuidPassword;
     private Integer userRegister;
     private Integer password;
+    private String toAccountNumber;
+    private String toAccountName;
 }
