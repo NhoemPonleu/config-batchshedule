@@ -1,10 +1,7 @@
 package com.example.batchconfig.sendBalance;
 
 import com.example.batchconfig.exception.InsufficientBalanceException;
-import com.example.batchconfig.sendBalance.constand.CheckStatuErrorCode;
-import com.example.batchconfig.sendBalance.constand.FeeTypeCode;
-import com.example.batchconfig.sendBalance.constand.TransferTypeCode;
-import com.example.batchconfig.sendBalance.constand.WithdrawalTransferTypeCode;
+import com.example.batchconfig.sendBalance.constand.*;
 import com.example.batchconfig.sendBalance.dto.TransferRequest;
 import com.example.batchconfig.sendBalance.dto.TransferResponse;
 import com.example.batchconfig.sendBalance.dto.WithDrawalRequest;
@@ -33,9 +30,10 @@ public class TransferServiceImpl implements TransferService {
     private final UserAuthenticationUtils userAuthenticationUtils;
     private final TransferRepository transferRepository;
     private final TransactionDetailsRepository transactionDetailsRepository;
+    private final GeneratePasswordSenderUtil generateRandomPassword;
     @Override
     public TransferResponse send(TransferRequest transferRequest) {
-        Integer password=generateRandomPassword();
+        Integer password=generateRandomPassword.generateRandomPassword();
         Transfer transfer = new Transfer();
         transfer.setTransferDate(LocalDate.now());
       //  transfer.setTransferAmount(transferRequest.getTransferAmount());
@@ -86,16 +84,20 @@ public class TransferServiceImpl implements TransferService {
     }
 
     // Method to generate a random password
-    private int generateRandomPassword() {
-        Random random = new Random();
-        return 100000 + random.nextInt(900000); // Generates a random 6-digit number
-    }
+//    private int generateRandomPassword() {
+//        Random random = new Random();
+//        return 100000 + random.nextInt(900000); // Generates a random 6-digit number
+//    }
     @Override
     public WithdrawalResponse withdrawalBalance(WithDrawalRequest withdrawalRequest) {
         // Find the transfer by receiver phone number, withdrawal amount, and password
         Transfer transfer = transferRepository.findByReceiverPhoneNumberAndPassword(
                 withdrawalRequest.getReciverPhoneNumber(),
                 withdrawalRequest.getRequestPassword());
+            if(!transfer.getPassword().equals(withdrawalRequest.getRequestPassword())&&
+                    !transfer.getReceiverPhoneNumber().equals(withdrawalRequest.getReciverPhoneNumber())) {
+                throw new InsufficientBalanceException("Password and receiver phone number are not match!!!");
+            }
 
         if (transfer != null && transfer.getWithdrawalYN().equals("N")) {
             if (transfer.getTransferAmount().compareTo(withdrawalRequest.getWithdrawalAmount()) != 0) {
