@@ -1,5 +1,8 @@
 package com.example.batchconfig.sendBalance.constand;
 
+import lombok.Getter;
+
+@Getter
 public enum FeeTypeCode {
     SENDER("S", "Sender Fee"),
     RECEIVER("T", "Receiver Fee");
@@ -12,11 +15,4 @@ public enum FeeTypeCode {
         this.description = description;
     }
 
-    public String getCode() {
-        return code;
-    }
-
-    public String getDescription() {
-        return description;
-    }
 }

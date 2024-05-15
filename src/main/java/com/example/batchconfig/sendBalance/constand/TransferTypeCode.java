@@ -1,5 +1,8 @@
 package com.example.batchconfig.sendBalance.constand;
 
+import lombok.Getter;
+
+@Getter
 public enum TransferTypeCode {
     NORMAL("N", "Normal"),
     CANCEL("C", "Cancel");
@@ -12,11 +15,4 @@ public enum TransferTypeCode {
         this.description = description;
     }
 
-    public String getCode() {
-        return code;
-    }
-
-    public String getDescription() {
-        return description;
-    }
 }

@@ -1,5 +1,8 @@
 package com.example.batchconfig.sendBalance.constand;
 
+import lombok.Getter;
+
+@Getter
 public enum WithdrawalTransferTypeCode {
     WITHDRAWAL("W", "Withdrawal"),
     TRANSFER("T", "Transfer");
@@ -12,11 +15,4 @@ public enum WithdrawalTransferTypeCode {
         this.description = description;
     }
 
-    public String getCode() {
-        return code;
-    }
-
-    public String getDescription() {
-        return description;
-    }
 }
