@@ -83,11 +83,6 @@ public class TransferServiceImpl implements TransferService {
         return transferResponse;
     }
 
-    // Method to generate a random password
-//    private int generateRandomPassword() {
-//        Random random = new Random();
-//        return 100000 + random.nextInt(900000); // Generates a random 6-digit number
-//    }
     @Override
     public WithdrawalResponse withdrawalBalance(WithDrawalRequest withdrawalRequest) {
         // Find the transfer by receiver phone number, withdrawal amount, and password
@@ -99,7 +94,7 @@ public class TransferServiceImpl implements TransferService {
                 throw new InsufficientBalanceException("Password and receiver phone number are not match!!!");
             }
 
-        if (transfer != null && transfer.getWithdrawalYN().equals("N")) {
+        if (transfer.getWithdrawalYN().equals("N")) {
             if (transfer.getTransferAmount().compareTo(withdrawalRequest.getWithdrawalAmount()) != 0) {
                 throw new InsufficientBalanceException("Transfer amount does not match withdrawal amount");
             }
