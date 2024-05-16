@@ -175,12 +175,14 @@ public class TransferServiceImpl implements TransferService {
     private void validateTransfer(Transfer transfer, WithDrawalRequest withdrawalRequest) {
         if (!transfer.getPassword().equals(withdrawalRequest.getRequestPassword()) ||
                 !transfer.getReceiverPhoneNumber().equals(withdrawalRequest.getReciverPhoneNumber())) {
+            logger.warning("password and request password do not match");
             throw new InsufficientBalanceException("Password and receiver phone number do not match!!!");
         }
     }
 
     private void validateWithdrawalAmount(Transfer transfer, WithDrawalRequest withdrawalRequest) {
         if (transfer.getTransferAmount().compareTo(withdrawalRequest.getWithdrawalAmount()) != 0) {
+            logger.warning("withdrawal amount do not match");
             throw new InsufficientBalanceException("Transfer amount does not match withdrawal amount");
         }
     }
