@@ -37,6 +37,7 @@ public class TransferServiceImpl implements TransferService {
     private final GeneratePasswordSenderUtil generateRandomPassword;
     private final AccountService accountService;
     private final AccountRepository accountRepository;
+
     @Override
     public TransferResponse send(TransferRequest transferRequest) {
         Account recipientAccount = null;
@@ -215,5 +216,5 @@ public class TransferServiceImpl implements TransferService {
     }
 
 
-
+}
 
