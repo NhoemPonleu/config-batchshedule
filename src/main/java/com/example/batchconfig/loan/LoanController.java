@@ -6,6 +6,7 @@ import com.example.batchconfig.loan.transaction.GenerateScheduleDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.security.auth.login.AccountNotFoundException;
@@ -14,14 +15,15 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/v1/loan")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class LoanController {
     private final LoanService loanService;
-
     @PostMapping
-    public BaseApi<?>registerNewLoan(@RequestBody LoanRequestDTO loanRequestDTO) throws AccountNotFoundException {
-       LoanReposeDTO loanReposeDTO= loanService.registerNewLoan(loanRequestDTO);
-                return BaseApi.builder()
+    @PreAuthorize("hasAuthority('admin:create')")
+    public BaseApi<?> registerNewLoan(@RequestBody LoanRequestDTO loanRequestDTO) throws AccountNotFoundException {
+        LoanReposeDTO loanReposeDTO= loanService.registerNewLoan(loanRequestDTO);
+        return BaseApi.builder()
                 .code(HttpStatus.OK.value())
                 .message("Loan registered successfully")
                 .timeStamp(LocalDateTime.now())
@@ -30,6 +32,7 @@ public class LoanController {
                 .build();
     }
     @PostMapping("/shedule")
+    @PreAuthorize("hasAuthority('admin:create')")
     public BaseApi<?>registerShedulePayment(RequestSheduleDTO sheduleDTO) {
         GenerateScheduleDTO loanScheduleItem=loanService.generateLoanSchedule(sheduleDTO);
         return BaseApi.builder()
@@ -41,6 +44,7 @@ public class LoanController {
                 .build();
     }
     @PostMapping("/{loanAccountNumber}/repay")
+    @PreAuthorize("hasAuthority('admin:create')")
     public ResponseEntity<String> repayLoan(@PathVariable String loanAccountNumber, @RequestParam BigDecimal repaymentAmount) {
         try {
             loanService.loanRepayment(loanAccountNumber, repaymentAmount);

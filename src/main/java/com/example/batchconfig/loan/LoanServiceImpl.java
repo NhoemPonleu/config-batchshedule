@@ -6,18 +6,12 @@ import com.example.batchconfig.account.transaction.AccountTransaction;
 import com.example.batchconfig.account.transaction.AccountTransactionRepository;
 import com.example.batchconfig.customer.Customer;
 import com.example.batchconfig.customer.CustomerRepository;
-import com.example.batchconfig.exception.InvalidRepaymentException;
 import com.example.batchconfig.exception.ResourceNotFoundException;
 import com.example.batchconfig.exception.ResourceNotFoundException1;
 import com.example.batchconfig.loan.transaction.*;
-import com.example.batchconfig.security.user.User;
-import com.example.batchconfig.security.user.UserRequestDTO;
 import com.example.batchconfig.util.UserAuthenticationUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +23,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -56,15 +49,15 @@ public class LoanServiceImpl implements LoanService {
         }
         String accountNumber = accountNumbers.get(0);
 
-        Account account = accountRepository.findById(Long.valueOf(accountNumber))
-                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+//        Account account = accountRepository.findById(Long.valueOf(accountNumber))
+//                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
 
         Double loanPercentage = calculateLoanPercentage(loanRequestDTO);
 
-        Loan loan = createNewLoan(loanRequestDTO, customer, account, loanPercentage);
+        Loan loan = createNewLoan(loanRequestDTO, customer, loanPercentage);
         Loan savedLoan = loanRepository.save(loan);
 
-        AccountDeposit accountDeposit = createAccountDeposit(loanRequestDTO, account, savedLoan);
+        AccountDeposit accountDeposit = createAccountDeposit(loanRequestDTO, savedLoan);
         accountDepositRepository.save(accountDeposit);
 
         return createLoanResponse(loanRequestDTO, savedLoan);
@@ -74,12 +67,12 @@ public class LoanServiceImpl implements LoanService {
         return loanRequestDTO.getInterestRate() * loanRequestDTO.getLoanTerm() / 100;
     }
 
-    private Loan createNewLoan(LoanRequestDTO loanRequestDTO, Customer customer, Account account, Double loanPercentage) {
+    private Loan createNewLoan(LoanRequestDTO loanRequestDTO, Customer customer, Double loanPercentage) {
         Loan loan = new Loan();
         loan.setLoanAmount(loanRequestDTO.getLoanAmount());
         loan.setLoanTerm(loanRequestDTO.getLoanTerm());
         loan.setInterestRate(loanRequestDTO.getInterestRate());
-        loan.setLoanAccountNumber(account.getAccountNumber());
+    //    loan.setLoanAccountNumber(account.getAccountNumber());
         loan.setLoanPercentage(loanPercentage);
         loan.setLoanDate(LocalDate.now());
         loan.setCreditOfficerName(loanRequestDTO.getCreditOfficerName());
@@ -87,13 +80,13 @@ public class LoanServiceImpl implements LoanService {
         loan.setRegisterTellerId(userAuthenticationUtils.getUserRequestDTO().getUserId());
         loan.setRegisterTellerName(userAuthenticationUtils.getUserRequestDTO().getUsername());
         loan.setCustomer(customer);
-        loan.setIdentityNo(customer.getIdentity());
+      //  loan.setIdentityNo(customer.getIdentity());
         return loan;
     }
 
-    private AccountDeposit createAccountDeposit(LoanRequestDTO loanRequestDTO, Account account, Loan savedLoan) {
+    private AccountDeposit createAccountDeposit(LoanRequestDTO loanRequestDTO, Loan savedLoan) {
         AccountDeposit accountDeposit = new AccountDeposit();
-        accountDeposit.setAccount(account);
+       // accountDeposit.setAccount(account);
         accountDeposit.setDepositAmount(loanRequestDTO.getLoanAmount());
         accountDeposit.setDepositDate(LocalDate.now());
         accountDeposit.setLoan(savedLoan);
