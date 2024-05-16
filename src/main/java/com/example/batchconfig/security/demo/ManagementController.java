@@ -27,8 +27,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/management")
-@Tag(name = "Management")
+@RequestMapping("/api/v1/interBank")
+@Tag(name = "Payment")
 @RequiredArgsConstructor
 public class ManagementController {
 
