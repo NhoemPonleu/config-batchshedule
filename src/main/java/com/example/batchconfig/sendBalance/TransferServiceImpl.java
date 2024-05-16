@@ -144,54 +144,75 @@ public class TransferServiceImpl implements TransferService {
 
     @Override
     public WithdrawalResponse withdrawalBalance(WithDrawalRequest withdrawalRequest) {
-        // Find the transfer by receiver phone number, withdrawal amount, and password
+        // Retrieve the transfer by receiver phone number and password
         Transfer transfer = transferRepository.findByReceiverPhoneNumberAndPassword(
                 withdrawalRequest.getReciverPhoneNumber(),
                 withdrawalRequest.getRequestPassword());
-            if(!transfer.getPassword().equals(withdrawalRequest.getRequestPassword())&&
-                    !transfer.getReceiverPhoneNumber().equals(withdrawalRequest.getReciverPhoneNumber())) {
-                throw new InsufficientBalanceException("Password and receiver phone number are not match!!!");
-            }
 
+        // Validate transfer details
+        validateTransfer(transfer, withdrawalRequest);
+
+        // Check if the withdrawal is already performed
         if (transfer.getWithdrawalYN().equals("N")) {
-            if (transfer.getTransferAmount().compareTo(withdrawalRequest.getWithdrawalAmount()) != 0) {
-                throw new InsufficientBalanceException("Transfer amount does not match withdrawal amount");
-            }
-            // Perform withdrawal
-            // Your withdrawal logic goes here
+            // Validate withdrawal amount
+            validateWithdrawalAmount(transfer, withdrawalRequest);
 
-            // Update the transfer status
-            transfer.setWithdrawalYN("Y");
-            transfer.setAfterTransferAmount(transfer.getTransferAmount().subtract(withdrawalRequest.getWithdrawalAmount()));
-            transferRepository.save(transfer);
-            // when withdrwal balance register into table transaction details
-            TransactionDetails transactionDetails = new TransactionDetails();
-            transactionDetails.setTransactionAmount(withdrawalRequest.getWithdrawalAmount());
-            transactionDetails.setTransactionDate(LocalDate.now());
-            transactionDetails.setTransactionTime(LocalTime.now());
-            transactionDetails.setReceiverPhoneNumber(transfer.getReceiverPhoneNumber());
-            transactionDetails.setFeeAmount(transfer.getFeeAmount());
-            transactionDetails.setTransactionTotalAmount(transfer.getTransferAmount().add(transfer.getFeeAmount()));
-            transactionDetails.setTransactionType(WithdrawalTransferTypeCode.WITHDRAWAL);
-            transactionDetails.setSenderPhoneNumber(transfer.getSenderPhoneNumber());
-            transactionDetailsRepository.save(transactionDetails);
-            // Construct withdrawal response
-            WithdrawalResponse withdrawalResponse = new WithdrawalResponse();
-            withdrawalResponse.setWithdrawalTime(LocalTime.now());
-            withdrawalResponse.setReciverPhoneNumber(withdrawalRequest.getReciverPhoneNumber());
-            withdrawalResponse.setWithdrawalAmount(withdrawalRequest.getWithdrawalAmount());
-            withdrawalResponse.setWithdrawalDate(LocalDate.now());
-            withdrawalResponse.setTransactionTypeCode(WithdrawalTransferTypeCode.WITHDRAWAL.getDescription());
-            withdrawalResponse.setUserRequestDTO(userAuthenticationUtils.getUserRequestDTO());
+            // Perform the withdrawal
+            performWithdrawal(transfer, withdrawalRequest);
 
-            return withdrawalResponse;
+            // Register the transaction details
+            registerTransactionDetails(transfer, withdrawalRequest);
+
+            // Construct and return the withdrawal response
+            return constructWithdrawalResponse(withdrawalRequest);
         } else {
-            // If no valid transfer found or withdrawal already done, return error response
+            // Handle invalid or already performed withdrawal request
             throw new CheckStatuErrorCode("Invalid withdrawal request", withdrawalRequest.getReciverPhoneNumber());
         }
     }
 
-}
+    private void validateTransfer(Transfer transfer, WithDrawalRequest withdrawalRequest) {
+        if (!transfer.getPassword().equals(withdrawalRequest.getRequestPassword()) ||
+                !transfer.getReceiverPhoneNumber().equals(withdrawalRequest.getReciverPhoneNumber())) {
+            throw new InsufficientBalanceException("Password and receiver phone number do not match!!!");
+        }
+    }
+
+    private void validateWithdrawalAmount(Transfer transfer, WithDrawalRequest withdrawalRequest) {
+        if (transfer.getTransferAmount().compareTo(withdrawalRequest.getWithdrawalAmount()) != 0) {
+            throw new InsufficientBalanceException("Transfer amount does not match withdrawal amount");
+        }
+    }
+
+    private void performWithdrawal(Transfer transfer, WithDrawalRequest withdrawalRequest) {
+        transfer.setWithdrawalYN("Y");
+        transfer.setAfterTransferAmount(transfer.getTransferAmount().subtract(withdrawalRequest.getWithdrawalAmount()));
+        transferRepository.save(transfer);
+    }
+
+    private void registerTransactionDetails(Transfer transfer, WithDrawalRequest withdrawalRequest) {
+        TransactionDetails transactionDetails = new TransactionDetails();
+        transactionDetails.setTransactionAmount(withdrawalRequest.getWithdrawalAmount());
+        transactionDetails.setTransactionDate(LocalDate.now());
+        transactionDetails.setTransactionTime(LocalTime.now());
+        transactionDetails.setReceiverPhoneNumber(transfer.getReceiverPhoneNumber());
+        transactionDetails.setFeeAmount(transfer.getFeeAmount());
+        transactionDetails.setTransactionTotalAmount(transfer.getTransferAmount().add(transfer.getFeeAmount()));
+        transactionDetails.setTransactionType(WithdrawalTransferTypeCode.WITHDRAWAL);
+        transactionDetails.setSenderPhoneNumber(transfer.getSenderPhoneNumber());
+        transactionDetailsRepository.save(transactionDetails);
+    }
+
+    private WithdrawalResponse constructWithdrawalResponse(WithDrawalRequest withdrawalRequest) {
+        WithdrawalResponse withdrawalResponse = new WithdrawalResponse();
+        withdrawalResponse.setWithdrawalTime(LocalTime.now());
+        withdrawalResponse.setReciverPhoneNumber(withdrawalRequest.getReciverPhoneNumber());
+        withdrawalResponse.setWithdrawalAmount(withdrawalRequest.getWithdrawalAmount());
+        withdrawalResponse.setWithdrawalDate(LocalDate.now());
+        withdrawalResponse.setTransactionTypeCode(WithdrawalTransferTypeCode.WITHDRAWAL.getDescription());
+        withdrawalResponse.setUserRequestDTO(userAuthenticationUtils.getUserRequestDTO());
+        return withdrawalResponse;
+    }
 
 
 
