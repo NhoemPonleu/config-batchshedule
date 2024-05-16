@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.security.auth.login.AccountNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -18,7 +19,7 @@ public class LoanController {
     private final LoanService loanService;
 
     @PostMapping
-    public BaseApi<?>registerNewLoan(@RequestBody LoanRequestDTO loanRequestDTO) {
+    public BaseApi<?>registerNewLoan(@RequestBody LoanRequestDTO loanRequestDTO) throws AccountNotFoundException {
        LoanReposeDTO loanReposeDTO= loanService.registerNewLoan(loanRequestDTO);
                 return BaseApi.builder()
                 .code(HttpStatus.OK.value())
