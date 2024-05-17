@@ -1,6 +1,9 @@
 package com.example.batchconfig.errorException;
 
+import java.io.Serial;
+
 public class MErrNotfoundException extends MException {
+@Serial
 private static final long serialVersionUID = 4590938470775174864L;
 	
 	public MErrNotfoundException() {

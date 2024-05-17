@@ -1,6 +1,9 @@
 package com.example.batchconfig.errorException;
 
+import java.io.Serial;
+
 public class MRegisterErrException extends MException {
+@Serial
 private static final long serialVersionUID = -4668068470041155355L;
 	
 	public MRegisterErrException() {

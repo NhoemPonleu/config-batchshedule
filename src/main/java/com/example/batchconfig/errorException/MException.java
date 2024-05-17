@@ -1,11 +1,13 @@
 package com.example.batchconfig.errorException;
 
 import java.io.PrintWriter;
+import java.io.Serial;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
 public class MException extends RuntimeException {
+	@Serial
 	private static final long	serialVersionUID		= 1437917247176570420L;
 	private Map<String, Object>	causeInfo				= new HashMap<>();
 	public static final String	REPLACRE_PARAMS			= "replace_params";

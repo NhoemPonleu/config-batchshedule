@@ -8,6 +8,7 @@ import com.example.batchconfig.account.transaction.transfer.DepositResponseDTO;
 import com.example.batchconfig.account.transaction.transfer.TransferRequestDTO;
 import com.example.batchconfig.account.transaction.transfer.TransferResponse;
 import com.example.batchconfig.brand.brandShedule.TellerTypeCode;
+import com.example.batchconfig.errorException.MRegisterErrException;
 import com.example.batchconfig.exception.CheckStatuError;
 import com.example.batchconfig.exception.InsufficientBalanceException;
 import com.example.batchconfig.exception.ResourceNotFoundException;
@@ -132,51 +133,61 @@ public class AccountTransactionServiceImpl implements AccountTranactionService {
     }
     @Transactional
     public TransferResponse transferBalance(TransferRequestDTO transferRequest) {
-        Integer userId = userAuthenticationUtils.getUserRequestDTO().getUserId();
-        Account senderAccount = accountRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Sender account not found"));
-       Account sender1=accountRepository.findByAccountNumber(senderAccount.getAccountNumber() )
-               .orElseThrow(() -> new ResourceNotFoundException1("Sender account not found","", senderAccount.getAccountNumber()));
-        Account receiverAccount = accountRepository.findByAccountNumber(transferRequest.getReceiverAccountId())
-                .orElseThrow(() -> new IllegalArgumentException("Receiver account not found"));
+        try {
+            Integer userId = userAuthenticationUtils.getUserRequestDTO().getUserId();
+            Account senderAccount = accountRepository.findByUserId(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("Sender account not found"));
+            Account sender1=accountRepository.findByAccountNumber(senderAccount.getAccountNumber() )
+                    .orElseThrow(() -> new ResourceNotFoundException1("Sender account not found","", senderAccount.getAccountNumber()));
+            Account receiverAccount = accountRepository.findByAccountNumber(transferRequest.getReceiverAccountId())
+                    .orElseThrow(() -> new IllegalArgumentException("Receiver account not found"));
 
-        BigDecimal amount = transferRequest.getAmount();
+            BigDecimal amount = transferRequest.getAmount();
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Transfer amount must be greater than zero");
+            }
 
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Transfer amount must be greater than zero");
+            BigDecimal senderNewBalance = senderAccount.getBalance().subtract(amount);
+            if (senderNewBalance.compareTo(BigDecimal.ZERO) < 0) {
+                throw new InsufficientBalanceException("Insufficient funds in sender's account");
+            }
+            BigDecimal receiverNewBalance = receiverAccount.getBalance().add(amount);
+
+            senderAccount.setBalance(senderNewBalance);
+            receiverAccount.setBalance(receiverNewBalance);
+
+            accountRepository.save(senderAccount);
+            accountRepository.save(receiverAccount);
+
+            AccountTransaction accountTransaction = new AccountTransaction();
+            accountTransaction.setAccountId(senderAccount.getAccountNumber());
+            accountTransaction.setTransactionAmount(amount);
+            accountTransaction.setTransactionDate(LocalDate.now());
+            accountTransaction.setTransactionType(TransactionType.TRANSFER_ACCOUNT.getCode());
+            accountTransaction.setTransactionTotalAmount(amount);
+            accountTransaction.setFromAccountId(senderAccount.getAccountNumber());
+            accountTransaction.setToAccountId(receiverAccount.getAccountNumber());
+            accountTransactionRepository.save(accountTransaction);
+
+            TransferResponse transferResponse = new TransferResponse();
+            transferResponse.setTransactionDate(LocalDate.now());
+            transferResponse.setAccountSenderName(senderAccount.getAccountName());
+            transferResponse.setAccountReceiverName(receiverAccount.getAccountName());
+            transferResponse.setReceiverAccountId(receiverAccount.getAccountNumber());
+            transferResponse.setSenderAccountId(senderAccount.getAccountNumber());
+            transferResponse.setTransactionTime(LocalTime.now());
+            transferResponse.setAmount(amount);
+            transferResponse.setTransactionTotalAmount(amount);
+
+            return transferResponse;
+        } catch (IllegalArgumentException | ResourceNotFoundException | InsufficientBalanceException e) {
+            throw e; // Rethrow known exceptions
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new MRegisterErrException("Transfer Error");
         }
-
-        BigDecimal senderNewBalance = sender1.getBalance().subtract(amount);
-        BigDecimal receiverNewBalance = receiverAccount.getBalance().add(amount);
-
-        sender1.setBalance(senderNewBalance);
-        receiverAccount.setBalance(receiverNewBalance);
-
-        AccountTransaction accountTransaction = new AccountTransaction();
-        accountTransaction.setAccountId(senderAccount.getAccountNumber());
-        accountTransaction.setTransactionAmount(amount);
-        accountTransaction.setTransactionDate(LocalDate.now());
-        accountTransaction.setTransactionType(TransactionType.TRANSFER_ACCOUNT.getCode());
-        accountTransaction.setTransactionTotalAmount(amount);
-        accountTransaction.setFromAccountId(senderAccount.getAccountNumber());
-        accountTransaction.setToAccountId(receiverAccount.getAccountNumber());
-        accountTransactionRepository.save(accountTransaction);
-
-        accountRepository.save(senderAccount);
-        accountRepository.save(receiverAccount);
-
-        TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setTransactionDate(LocalDate.now());
-        transferResponse.setAccountSenderName(senderAccount.getAccountName());
-        transferResponse.setAccountReceiverName(receiverAccount.getAccountName());
-        transferResponse.setReceiverAccountId(receiverAccount.getAccountNumber());
-        transferResponse.setSenderAccountId(senderAccount.getAccountNumber());
-        transferResponse.setTransactionTime(LocalTime.now());
-        transferResponse.setAmount(amount);
-        transferResponse.setTransactionTotalAmount(amount);
-
-        return transferResponse;
     }
+
 
     @Override
     public Account getAccount(String accountId) {

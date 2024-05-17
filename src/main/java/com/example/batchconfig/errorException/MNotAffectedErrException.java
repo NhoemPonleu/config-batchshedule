@@ -1,6 +1,9 @@
 package com.example.batchconfig.errorException;
 
+import java.io.Serial;
+
 public class MNotAffectedErrException extends MException {
+@Serial
 private static final long serialVersionUID = -6167372328797543749L;
 	
 	public MNotAffectedErrException() {

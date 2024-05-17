@@ -1,6 +1,9 @@
 package com.example.batchconfig.errorException;
 
+import java.io.Serial;
+
 public class MErrException extends MException{
+	@Serial
 	private static final long	serialVersionUID	= -4454580843735287729L;
 //	private String[]			callStack			= new String[5];
 //	
