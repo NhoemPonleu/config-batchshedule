@@ -2,9 +2,9 @@ spring:
   application:
     name: todo-app
   datasource:
-    url: jdbc:postgres://student_ogkx_user:xiIAUPN0BFj04PIstIoCpEpXqMJ7f8kS@dpg-co7o2ecf7o1s738js3g0-a/student_ogkx
-    password: xiIAUPN0BFj04PIstIoCpEpXqMJ7f8kS
-    username: student_ogkx_user
+    url: jdbc:postgresql://dpg-cpmoghmehbks73fs7ft0-a.singapore-postgres.render.com:5432/dbtest_w2xr
+    password: CV7zgtqsz1uh6Ljqg5HmQxhgbLVRYZL2
+    username: dbtest_w2xr_user
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
