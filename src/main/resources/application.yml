@@ -11,6 +11,17 @@ spring:
       ddl-auto: update
       format_sql: true
     show-sql: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: surveybox.services@gmail.com
+    password: kbpjifinhwegpdbe
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 application:
   security:
