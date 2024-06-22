@@ -23,13 +23,6 @@ public class AuthenticationController {
   private final ApplicationEventPublisher publisher;
   private final VerificationTokenRepository tokenRepository;
   private final UserService userService;
-
-  @PostMapping
-  public String registerUser(@RequestBody RegistrationRequest registrationRequest, final HttpServletRequest request){
-    User user = userService.registerUser(registrationRequest);
-    publisher.publishEvent(new RegistrationCompleteEvent(user, applicationUrl(request)));
-    return "Success!  Please, check your email for to complete your registration";
-  }
   @GetMapping("/verifyEmail")
   public String verifyEmail(@RequestParam("token") String token){
     VerificationToken theToken = tokenRepository.findByToken(token);
@@ -42,8 +35,15 @@ public class AuthenticationController {
     }
     return "Invalid verification token";
   }
+
+  @PostMapping
+  public String registerUser(@RequestBody RegistrationRequest registrationRequest, final HttpServletRequest request){
+    User user = userService.registerUser(registrationRequest);
+    publisher.publishEvent(new RegistrationCompleteEvent(user, applicationUrl(request)));
+    return "Success!  Please, check your email for to complete your registration";
+  }
   public String applicationUrl(HttpServletRequest request) {
-    return "http://"+request.getServerName()+":"+request.getServerPort()+request.getContextPath();
+    return "http://" +request.getServerName()+":"+request.getServerPort()+request.getContextPath();
   }
   @PostMapping("/register")
   public ResponseEntity<AuthenticationResponse> register(

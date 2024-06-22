@@ -1,11 +1,10 @@
 package com.example.batchconfig.security.user;
 
+import com.example.batchconfig.security.user.token.VerificationToken;
+import com.example.batchconfig.security.user.token.VerificationTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 
@@ -24,4 +23,5 @@ public class UserController {
         service.changePassword(request, connectedUser);
         return ResponseEntity.ok().build();
     }
+
 }
